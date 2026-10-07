@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   Heart,
@@ -12,6 +12,7 @@ import {
   Award
 } from 'lucide-react';
 import type { ReelPost } from '../../../shared/types';
+import { useSession } from '../session';
 
 interface CelebrationFeedProps {
   reels: ReelPost[];
@@ -24,13 +25,25 @@ export const CelebrationFeed: React.FC<CelebrationFeedProps> = ({
   onCheer,
   onOpenPlannerForReel,
 }) => {
+  const { statusOf } = useSession();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [savedReels, setSavedReels] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState<'circle' | 'world'>('world');
 
-  const currentReel = reels[currentIndex] || reels[0];
+  // Filter reels based on tab
+  const displayedReels = activeTab === 'world' 
+    ? reels 
+    : reels.filter(r => statusOf(r.user.id) === 'FRIENDS' || r.user.id === 'u-1' || r.user.id === 'u-2');
+
+  const currentReel = displayedReels[currentIndex] || displayedReels[0];
+
+  // Reset index when tab changes
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [activeTab]);
 
   const handleNext = () => {
-    if (currentIndex < reels.length - 1) {
+    if (currentIndex < displayedReels.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     }
   };
@@ -86,6 +99,49 @@ export const CelebrationFeed: React.FC<CelebrationFeedProps> = ({
       padding: '16px 24px',
       overflow: 'hidden'
     }}>
+      {/* Feed Tabs: Circle / World */}
+      <div style={{
+        position: 'absolute',
+        top: '24px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: '24px',
+        zIndex: 50,
+      }}>
+        <button 
+          onClick={() => setActiveTab('circle')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--fg)',
+            fontSize: '18px',
+            fontWeight: 700,
+            opacity: activeTab === 'circle' ? 1 : 0.5,
+            cursor: 'pointer',
+            paddingBottom: '8px',
+            borderBottom: activeTab === 'circle' ? '2px solid var(--fg)' : '2px solid transparent'
+          }}
+        >
+          Circle
+        </button>
+        <button 
+          onClick={() => setActiveTab('world')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--fg)',
+            fontSize: '18px',
+            fontWeight: 700,
+            opacity: activeTab === 'world' ? 1 : 0.5,
+            cursor: 'pointer',
+            paddingBottom: '8px',
+            borderBottom: activeTab === 'world' ? '2px solid var(--fg)' : '2px solid transparent'
+          }}
+        >
+          World
+        </button>
+      </div>
       {/* Centered Reel Container + Right Action Rail */}
       <div style={{
         display: 'flex',
@@ -415,7 +471,7 @@ export const CelebrationFeed: React.FC<CelebrationFeedProps> = ({
 
         <button
           onClick={handleNext}
-          disabled={currentIndex === reels.length - 1}
+          disabled={currentIndex === displayedReels.length - 1}
           title="Next celebration"
           style={{
             width: '42px',
@@ -426,8 +482,8 @@ export const CelebrationFeed: React.FC<CelebrationFeedProps> = ({
             display: 'grid',
             placeItems: 'center',
             boxShadow: 'var(--shadow-sm)',
-            cursor: currentIndex === reels.length - 1 ? 'not-allowed' : 'pointer',
-            opacity: currentIndex === reels.length - 1 ? 0.35 : 1,
+            cursor: currentIndex === displayedReels.length - 1 ? 'not-allowed' : 'pointer',
+            opacity: currentIndex === displayedReels.length - 1 ? 0.35 : 1,
             color: 'var(--fg)'
           }}
         >

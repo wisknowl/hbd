@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Compass, 
+  Globe, 
   Home, 
   Gift, 
   Archive, 
@@ -13,10 +13,14 @@ import {
   Sparkles,
   Calendar,
   Radio,
-  Package
+  Package,
+  Users,
+  User
 } from 'lucide-react';
+import { useSession } from '../session';
+import { Avatar } from './Avatar';
 
-export type NavViewType = 'explore' | 'foryou' | 'hbdays' | 'gifts' | 'rooms' | 'vault' | 'packages';
+export type NavViewType = 'explore' | 'foryou' | 'hbdays' | 'friends' | 'profile' | 'gifts' | 'rooms' | 'vault' | 'packages';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -39,6 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isDark,
   toggleTheme,
 }) => {
+  const { profile } = useSession();
   const [searchValue, setSearchValue] = useState('');
   const [isHovered, setIsHovered] = useState(false);
 
@@ -48,9 +53,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const navItems = [
-    { id: 'explore', label: 'Explore', icon: Compass },
-    { id: 'foryou', label: 'For You', icon: Home },
+    { id: 'explore', label: 'World Celebrations', icon: Globe },
+    { id: 'foryou', label: 'Moments', icon: Home },
     { id: 'hbdays', label: 'HBDays', icon: Calendar },
+    { id: 'friends', label: 'Friends & Circle', icon: Users },
+    { id: 'profile', label: 'My Profile', icon: User },
     { id: 'gifts', label: 'Universal Gifts', icon: Gift },
     { id: 'rooms', label: 'Celebration Rooms', icon: Radio },
     { id: 'vault', label: 'Memory Vault', icon: Archive },
@@ -375,58 +382,115 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Log in CTA (Expanded only) */}
-        {!isCollapsed ? (
-          <div style={{
-            backgroundColor: 'var(--bg)',
-            borderRadius: '16px',
-            padding: '14px',
-            border: '1px solid var(--line)',
-            marginBottom: '14px'
-          }}>
-            <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.4, marginBottom: '10px' }}>
-              Log in to celebrate friends, bookmark milestones, and cheer with confetti.
-            </p>
-            <button
-              onClick={openPlanner}
+        {/* Profile Card / Log in CTA */}
+        {profile ? (
+          !isCollapsed ? (
+            <div 
+              onClick={() => setActiveView('profile')}
               style={{
-                width: '100%',
-                padding: '9px',
-                borderRadius: '999px',
-                backgroundColor: 'var(--coral)',
-                color: '#fff',
-                fontWeight: 800,
-                fontSize: '13px',
-                boxShadow: '0 4px 12px rgba(255, 107, 107, 0.3)',
+                backgroundColor: activeView === 'profile' ? 'var(--purple-soft)' : 'var(--bg)',
+                borderRadius: '16px',
+                padding: '12px',
+                border: activeView === 'profile' ? '1.5px solid var(--purple)' : '1px solid var(--line)',
+                marginBottom: '14px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px'
+                gap: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
               }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--purple)')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = activeView === 'profile' ? 'var(--purple)' : 'var(--line)')}
             >
-              <Sparkles size={13} />
-              Log in
-            </button>
-          </div>
+              <Avatar name={profile.fullName} src={profile.avatarUrl} size={40} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {profile.fullName}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                  @{profile.handle}
+                </div>
+              </div>
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                color: 'var(--purple)',
+                padding: '3px 8px',
+                borderRadius: '999px',
+                backgroundColor: 'rgba(91, 42, 134, 0.1)'
+              }}>
+                YOU
+              </span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+              <button
+                onClick={() => setActiveView('profile')}
+                title={`Profile: ${profile.fullName}`}
+                style={{
+                  padding: 0,
+                  borderRadius: '50%',
+                  border: activeView === 'profile' ? '2px solid var(--purple)' : '2px solid transparent',
+                  cursor: 'pointer'
+                }}
+              >
+                <Avatar name={profile.fullName} src={profile.avatarUrl} size={36} />
+              </button>
+            </div>
+          )
         ) : (
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-            <button
-              onClick={openPlanner}
-              title="Log in"
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--coral)',
-                color: '#fff',
-                display: 'grid',
-                placeItems: 'center',
-                boxShadow: '0 4px 10px rgba(255, 107, 107, 0.3)'
-              }}
-            >
-              <Sparkles size={16} />
-            </button>
-          </div>
+          !isCollapsed ? (
+            <div style={{
+              backgroundColor: 'var(--bg)',
+              borderRadius: '16px',
+              padding: '14px',
+              border: '1px solid var(--line)',
+              marginBottom: '14px'
+            }}>
+              <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.4, marginBottom: '10px' }}>
+                Log in to celebrate friends, bookmark milestones, and cheer with confetti.
+              </p>
+              <button
+                onClick={openPlanner}
+                style={{
+                  width: '100%',
+                  padding: '9px',
+                  borderRadius: '999px',
+                  backgroundColor: 'var(--coral)',
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: '13px',
+                  boxShadow: '0 4px 12px rgba(255, 107, 107, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Sparkles size={13} />
+                Log in
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+              <button
+                onClick={openPlanner}
+                title="Log in"
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--coral)',
+                  color: '#fff',
+                  display: 'grid',
+                  placeItems: 'center',
+                  boxShadow: '0 4px 10px rgba(255, 107, 107, 0.3)'
+                }}
+              >
+                <Sparkles size={16} />
+              </button>
+            </div>
+          )
         )}
 
         {/* Footer info (Expanded only) */}

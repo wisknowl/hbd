@@ -107,3 +107,82 @@ a {
 .spin-disc {
   animation: spinDisc 4s linear infinite;
 }
+
+:root { --emerald: #1A8F6B; }
+
+/* ---------- Reusable form + action primitives ---------- */
+.hbd-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.hbd-input {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.hbd-input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(91, 42, 134, 0.12);
+}
+
+.hbd-chip {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.hbd-chip:hover { border-color: var(--purple); }
+.hbd-chip.is-on {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: var(--cream);
+}
+.hbd-chip.is-avoid.is-on {
+  background: var(--coral);
+  border-color: var(--coral);
+  color: #fff;
+}
+
+.hbd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  transition: transform 0.12s, box-shadow 0.15s, opacity 0.15s;
+}
+.hbd-btn:active { transform: scale(0.97); }
+.hbd-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.hbd-btn-primary { background: var(--purple); color: var(--cream); box-shadow: 0 6px 16px rgba(91, 42, 134, 0.25); }
+.hbd-btn-coral { background: var(--coral); color: #fff; box-shadow: 0 6px 16px rgba(255, 107, 107, 0.3); }
+.hbd-btn-ghost { background: var(--card); color: var(--fg); border: 1px solid var(--line); }
+
+@keyframes hbdFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hbd-fade-up { animation: hbdFadeUp 0.28s cubic-bezier(0.2, 0, 0, 1) both; }
+
+@keyframes hbdSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.hbd-slide-in { animation: hbdSlideIn 0.28s cubic-bezier(0.2, 0, 0, 1) both; }

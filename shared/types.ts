@@ -217,3 +217,50 @@ export interface HBDGivesCause {
   imageUrl: string;
   description: string;
 }
+
+// -------------------------------------------------------------
+// Accounts, Onboarding & Celebration Preferences
+// -------------------------------------------------------------
+export type AuthMethod = 'PHONE' | 'EMAIL' | 'GOOGLE' | 'APPLE';
+
+/** Who may see a user's birthday. The shipping address is NEVER shown to other users. */
+export type BirthdayVisibility = 'EVERYONE' | 'FRIENDS' | 'ONLY_ME';
+
+export interface CelebrationPreferences {
+  interests: string[];        // e.g. 'Books', 'Perfume', 'Gaming'
+  giftWishes: string[];       // things they'd love to receive
+  avoid: string[];            // allergies, no alcohol, no flowers, etc.
+  favoriteColor?: string;     // hex
+  clothingSize?: string;
+  shoeSize?: string;
+}
+
+export interface PrivacySettings {
+  birthdayVisibility: BirthdayVisibility;
+  showAge: boolean;
+  preferencesVisibleToFriends: boolean;
+}
+
+export interface HBDProfile {
+  id: string;
+  handle: string;
+  fullName: string;
+  avatarUrl?: string;
+  city: string;
+  country: string;
+  birthDay: number;           // 1-31
+  birthMonth: number;         // 1-12
+  birthYear?: number;         // optional — many users won't share it
+  bio?: string;
+  isVerified?: boolean;
+  preferences: CelebrationPreferences;
+  privacy: PrivacySettings;
+  authMethod?: AuthMethod;
+  contact?: string;           // phone or email (private, never shown to others)
+  createdAt?: string;
+}
+
+// -------------------------------------------------------------
+// Friends (Follow = one-way, Friend = mutual)
+// -------------------------------------------------------------
+export type FriendshipStatus = 'NONE' | 'REQUEST_SENT' | 'REQUEST_RECEIVED' | 'FRIENDS';

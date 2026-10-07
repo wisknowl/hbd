@@ -8,10 +8,15 @@ import { PlannerModal } from './components/PlannerModal';
 import { HBDaysView } from './components/HBDaysView';
 import { GiftEngineView } from './components/GiftEngineView';
 import { CelebrationRoomsView } from './components/CelebrationRoomsView';
+import { OnboardingView } from './components/OnboardingView';
+import { FriendsView } from './components/FriendsView';
+import { ProfileView } from './components/ProfileView';
+import { useSession } from './session';
 import { mockReels, mockPackages } from './mockData';
 import type { ReelPost, CelebrationCategory, PersonCircleMember } from '../../shared/types';
 
 export const App: React.FC = () => {
+  const { profile } = useSession();
   // Default landing page is Explore
   const [activeView, setActiveView] = useState<NavViewType>('explore');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -88,7 +93,13 @@ export const App: React.FC = () => {
       backgroundColor: 'var(--bg)', 
       overflow: 'hidden' 
     }}>
-      {/* Expanded / Collapsible Left Sidebar */}
+      {!profile ? (
+        <div style={{ width: '100%', height: '100%' }}>
+          <OnboardingView onComplete={() => setActiveView('explore')} />
+        </div>
+      ) : (
+        <>
+          {/* Expanded / Collapsible Left Sidebar */}
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={toggleSidebarCollapse}
@@ -121,6 +132,17 @@ export const App: React.FC = () => {
           <HBDaysView
             onPlanCelebration={(cat, name) => handleOpenPlanner(cat, name)}
             onOpenGiftsForPerson={handleOpenGiftsForPerson}
+          />
+        )}
+
+        {activeView === 'friends' && (
+          <FriendsView />
+        )}
+
+        {activeView === 'profile' && (
+          <ProfileView 
+            onOpenPlanner={() => handleOpenPlanner('BIRTHDAY', '')}
+            onNavigateToFriends={() => setActiveView('friends')}
           />
         )}
 
@@ -164,6 +186,8 @@ export const App: React.FC = () => {
           console.log('Booked celebration request:', booking);
         }}
       />
+        </>
+      )}
     </div>
   );
 };
