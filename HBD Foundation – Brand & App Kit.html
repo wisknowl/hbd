@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HBD Foundation – Brand & App Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--purple:#5B2A86;--gold:#F4B942;--coral:#FF6B6B;--cream:#FFF8EE;--char:#202124;
+--bg:#FFF8EE;--fg:#202124;--muted:#6b6275;--card:#fff;--line:#e8dccb;--hero:#5B2A86;--herofg:#FFF8EE;--link:#5B2A86;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17101f;--fg:#FFF8EE;--muted:#b9aec7;--card:#241833;--line:#3a2a50;--hero:#2a1640;--link:#F4B942}}
+:root[data-theme="dark"]{--bg:#17101f;--fg:#FFF8EE;--muted:#b9aec7;--card:#241833;--line:#3a2a50;--hero:#2a1640;--link:#F4B942}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 16px/1.6 Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:Poppins,Inter,sans-serif;margin:0;line-height:1.1}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+section{padding:56px 0;border-top:1px solid var(--line)}
+h2{font-size:clamp(26px,4vw,36px);font-weight:800;margin-bottom:8px}
+.lead{color:var(--muted);max-width:60ch;margin:0 0 28px}
+/* hero */
+.hero{background:var(--hero);color:var(--herofg);position:relative;overflow:hidden;padding:72px 0 64px;border:0}
+.hero .wrap{position:relative;z-index:1}
+.rings{position:absolute;right:-120px;top:50%;transform:translateY(-50%);width:640px;max-width:90vw;opacity:.9}
+.mark{font:800 clamp(72px,16vw,150px)/.9 Poppins,sans-serif;letter-spacing:-.04em;margin:0}
+.mark i{font-style:normal;color:var(--gold)}
+.hero p.tag{font:700 clamp(20px,3.4vw,30px)/1.2 Poppins,sans-serif;margin:18px 0 8px}
+.hero p.sub{max-width:46ch;opacity:.85;margin:0 0 26px}
+/* buttons */
+.btn{font:600 15px/1 Inter,sans-serif;border:2px solid transparent;border-radius:999px;padding:14px 24px;min-height:48px;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible,.chip:focus-visible,.tab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.b-pri{background:var(--purple);color:var(--cream)}.b-pri:hover{background:#6d36a0}
+.b-gold{background:var(--gold);color:var(--char)}.b-gold:hover{background:#f7c866}
+.b-coral{background:var(--coral);color:#fff}.b-coral:hover{background:#ff8080}
+.b-out{background:transparent;border-color:currentColor;color:var(--link)}
+.b-ghost{background:transparent;color:var(--link);padding-inline:12px}
+.b-dis{background:#d9d2e0;color:#8a8294;cursor:not-allowed}
+.b-sm{padding:10px 16px;min-height:40px;font-size:13px}
+.hero .b-out{color:var(--cream)}
+.fab{width:56px;height:56px;border-radius:50%;background:var(--gold);color:var(--char);border:0;font:700 28px/1 Poppins;cursor:pointer;box-shadow:0 8px 20px rgba(91,42,134,.35)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+/* grid cards */
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px}
+.card h3{font-size:18px;margin-bottom:6px}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.card .em{font-size:28px;display:block;margin-bottom:8px}
+/* logos */
+.logos .card{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.logos svg{width:100%;height:120px}
+/* colors */
+.sw{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.sw div{border-radius:18px;padding:18px 16px;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;font-size:13px;border:1px solid var(--line)}
+.sw b{font:700 15px Poppins}
+.type-demo{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+/* phones */
+.phones{display:flex;gap:28px;overflow-x:auto;padding:8px 4px 24px;scroll-snap-type:x mandatory}
+.phone{flex:0 0 270px;scroll-snap-align:center}
+.phone .cap{font:600 14px Poppins;text-align:center;margin-top:12px;color:var(--muted)}
+.device{width:270px;height:556px;border-radius:40px;background:#111;padding:9px;box-shadow:0 20px 40px rgba(32,10,60,.28)}
+.screen{width:100%;height:100%;border-radius:32px;background:#FFF8EE;color:#202124;overflow:hidden;display:flex;flex-direction:column;position:relative;font-size:12px;line-height:1.4}
+.notch{width:84px;height:20px;background:#111;border-radius:0 0 14px 14px;margin:0 auto;flex:none}
+.sbody{flex:1;overflow:hidden;padding:10px 14px 0;display:flex;flex-direction:column;gap:10px}
+.scr h4{font:800 19px/1.15 Poppins;margin:0}
+.scr small{color:#6b6275}
+.hdr{display:flex;justify-content:space-between;align-items:center}
+.logo-s{font:800 20px Poppins;color:#5B2A86;letter-spacing:-.03em}.logo-s i{font-style:normal;color:#F4B942}
+.avatar{width:30px;height:30px;border-radius:50%;background:#F4B942;display:grid;place-items:center;font-weight:700}
+.remind{background:#5B2A86;color:#FFF8EE;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.remind b{font:700 14px Poppins}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid #5B2A86;color:#5B2A86;background:transparent;border-radius:999px;padding:7px 11px;font:600 11.5px Inter;cursor:pointer}
+.chip[aria-pressed="true"]{background:#5B2A86;color:#FFF8EE}
+.chip.gold[aria-pressed="true"]{background:#F4B942;border-color:#F4B942;color:#202124}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:#fff;border:1px solid #eadfcd;border-radius:14px;padding:10px;font-weight:600;font-size:12px}
+.tile span{display:block;font-size:20px}
+.field{background:#fff;border:1px solid #eadfcd;border-radius:12px;padding:9px 11px;display:flex;justify-content:space-between;font-size:11.5px}
+.field b{color:#5B2A86}
+.sbtn{border:0;border-radius:999px;padding:12px;font:700 13px Inter;cursor:pointer;width:100%}
+.sbtn.p{background:#5B2A86;color:#FFF8EE}.sbtn.g{background:#F4B942;color:#202124}.sbtn.o{background:transparent;border:2px solid #5B2A86;color:#5B2A86}
+.tabs{flex:none;display:flex;justify-content:space-around;padding:8px 6px 14px;background:#fff;border-top:1px solid #eadfcd;margin-top:auto}
+.tab{background:none;border:0;font:600 10px Inter;color:#8a8294;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;min-width:44px;min-height:40px}
+.tab span{font-size:18px}.tab.on{color:#5B2A86}
+.tabs .plus{width:44px;height:44px;margin-top:-22px;border-radius:50%;background:#F4B942;border:0;font:700 24px Poppins;box-shadow:0 6px 14px rgba(91,42,134,.35);cursor:pointer}
+.global{background:linear-gradient(160deg,#5B2A86,#7b3fb0);color:#FFF8EE;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.route{display:flex;align-items:center;gap:6px;font-weight:600}.route hr{flex:1;border:0;border-top:2px dashed #F4B942;margin:0}
+.chk{display:flex;gap:8px;align-items:center;font-size:12px}.chk i{width:16px;height:16px;border-radius:5px;border:2px solid #5B2A86;display:inline-block}.chk i.on{background:#5B2A86;box-shadow:inset 0 0 0 2px #FFF8EE}
+/* roadmap */
+.road{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));counter-reset:p}
+.road .card{position:relative}
+.road .card:before{counter-increment:p;content:"Phase " counter(p);font:700 12px Poppins;color:var(--link);display:block;margin-bottom:6px}
+a{color:var(--link)}
+footer{padding:32px 0 48px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <svg class="rings" viewBox="0 0 400 400" aria-hidden="true">
+    <g fill="none" stroke="#F4B942">
+      <circle cx="200" cy="200" r="150" stroke-opacity=".18" stroke-width="2"/>
+      <circle cx="200" cy="200" r="110" stroke-opacity=".3" stroke-width="2"/>
+      <circle cx="200" cy="200" r="70" stroke-opacity=".5" stroke-width="3"/>
+      <circle cx="200" cy="200" r="34" stroke-opacity=".8" stroke-width="3"/>
+    </g>
+    <circle cx="200" cy="200" r="12" fill="#F4B942"/>
+  </svg>
+  <div class="wrap">
+    <h1 class="mark">HB<i>D</i></h1>
+    <p class="tag">Celebrate What Matters.</p>
+    <p class="sub">The global celebration brand for birthdays, beginnings, milestones, anniversaries, achievements and memories.</p>
+    <div class="row">
+      <button class="btn b-gold">Plan a celebration</button>
+      <button class="btn b-out">Celebrate something</button>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>What HBD Foundation is</h2>
+    <p class="lead">Foundation means the foundation of celebration, not an NGO. If something was born, began, reached a milestone or deserves to be remembered, HBD can celebrate it. We don't ask “whose birthday is it?” We ask “what is worth celebrating?”</p>
+    <div class="grid">
+      <div class="card"><span class="em">🎂</span><h3>HBD Birthdays</h3><p>Children, adults, parents, couples, friends.</p></div>
+      <div class="card"><span class="em">🚀</span><h3>HBD Beginnings</h3><p>Businesses, startups, products, ideas, movements.</p></div>
+      <div class="card"><span class="em">🏆</span><h3>HBD Milestones</h3><p>Graduations, promotions, millionth customer.</p></div>
+      <div class="card"><span class="em">🏛️</span><h3>HBD Anniversaries</h3><p>Weddings, companies, communities, products.</p></div>
+      <div class="card"><span class="em">🎁</span><h3>HBD Gifts</h3><p>Cakes, flowers, personalised gifts, experiences.</p></div>
+      <div class="card"><span class="em">🎥</span><h3>HBD Digital</h3><p>Cards, tribute videos, invitations, memory pages.</p></div>
+      <div class="card"><span class="em">📸</span><h3>HBD Memories</h3><p>Photos, stories and the future Memory Vault.</p></div>
+      <div class="card"><span class="em">🏢</span><h3>HBD Corporate</h3><p>Employee and company milestones, launches, awards.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap logos">
+    <h2>Logo directions</h2>
+    <p class="lead">No cakes, candles or balloons. A symbol for the moment something comes into existence.</p>
+    <div class="grid">
+      <div class="card">
+        <svg viewBox="0 0 220 120" role="img" aria-label="HBD Heart"><text x="110" y="78" text-anchor="middle" font-family="Poppins" font-weight="800" font-size="64" fill="#5B2A86" letter-spacing="-3">HBD</text><path d="M110 104c-22-14-30-24-30-33 0-8 14-8 30 4 16-12 30-12 30-4 0 9-8 19-30 33z" fill="#FF6B6B" transform="translate(0 4) scale(1 .35) translate(0 190)" opacity="0"/><path d="M110 18c-5-8-17-6-17 3 0 6 8 11 17 17 9-6 17-11 17-17 0-9-12-11-17-3z" fill="#FF6B6B"/></svg>
+        <h3>A · HBD Heart</h3><p>Letters form a heart. People, love, celebration.</p>
+      </div>
+      <div class="card">
+        <svg viewBox="0 0 220 120" role="img" aria-label="HBD Spark"><text x="104" y="84" text-anchor="middle" font-family="Poppins" font-weight="800" font-size="64" fill="#5B2A86" letter-spacing="-3">HBD</text><path d="M188 14l4 14 14 4-14 4-4 14-4-14-14-4 14-4z" fill="#F4B942"/></svg>
+        <h3>B · HBD Spark</h3><p>A star marks the moment something begins.</p>
+      </div>
+      <div class="card">
+        <svg viewBox="0 0 220 120" role="img" aria-label="HBD Origin"><g fill="none" stroke="#5B2A86"><circle cx="46" cy="60" r="40" stroke-opacity=".2" stroke-width="3"/><circle cx="46" cy="60" r="26" stroke-opacity=".5" stroke-width="3"/></g><circle cx="46" cy="60" r="10" fill="#F4B942"/><text x="100" y="78" font-family="Poppins" font-weight="800" font-size="52" fill="#5B2A86" letter-spacing="-2">HBD</text></svg>
+        <h3>C · HBD Origin</h3><p>A point expanding outward: everything begins somewhere. Used on this page.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Colour</h2>
+    <p class="lead">Purple, gold and cream lead. Coral is the emotional accent.</p>
+    <div class="sw">
+      <div style="background:#5B2A86;color:#FFF8EE"><b>Deep Purple</b>#5B2A86<br>Creativity</div>
+      <div style="background:#F4B942;color:#202124"><b>Warm Gold</b>#F4B942<br>Achievement</div>
+      <div style="background:#FF6B6B;color:#fff"><b>Coral</b>#FF6B6B<br>Joy, warmth</div>
+      <div style="background:#FFF8EE;color:#202124"><b>Cream</b>#FFF8EE<br>Memories</div>
+      <div style="background:#202124;color:#FFF8EE"><b>Charcoal</b>#202124<br>Professional</div>
+    </div>
+    <h2 style="margin-top:48px">Type</h2>
+    <div class="type-demo">
+      <div class="card"><small style="color:var(--muted)">Poppins ExtraBold: logo and headlines</small><div style="font:800 40px/1.1 Poppins;margin-top:8px">Celebrate What Matters.</div></div>
+      <div class="card"><small style="color:var(--muted)">Inter: body and interface</small><p style="color:var(--fg);font-size:16px;margin-top:8px">Tell us the date, place, guest count and budget. HBD designs the celebration and coordinates every provider behind the scenes.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Buttons</h2>
+    <p class="lead">Every action names what happens next. Minimum 48px tap height, visible keyboard focus.</p>
+    <div class="card" style="display:grid;gap:22px">
+      <div><p style="margin-bottom:10px"><b style="color:var(--fg)">Primary actions</b></p>
+        <div class="row"><button class="btn b-pri">Plan a celebration</button><button class="btn b-gold">Create my celebration</button><button class="btn b-coral">Send a surprise</button></div></div>
+      <div><p style="margin-bottom:10px"><b style="color:var(--fg)">Secondary, ghost, disabled</b></p>
+        <div class="row"><button class="btn b-out">Celebrate something</button><button class="btn b-ghost">Skip for now</button><button class="btn b-dis" disabled>Choose a date first</button></div></div>
+      <div><p style="margin-bottom:10px"><b style="color:var(--fg)">Compact and floating</b></p>
+        <div class="row"><button class="btn b-pri b-sm">Add reminder</button><button class="btn b-out b-sm">Share</button><button class="fab" aria-label="New celebration">+</button></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Mobile app view</h2>
+    <p class="lead">Swipe through three core screens. Chips and tabs are tappable.</p>
+    <div class="phones">
+
+      <div class="phone"><div class="device"><div class="screen scr"><div class="notch"></div>
+        <div class="sbody">
+          <div class="hdr"><span class="logo-s">HB<i>D</i></span><span class="avatar">A</span></div>
+          <div><small>Good morning, Amina</small><h4>What are we celebrating?</h4></div>
+          <div class="remind"><b>Your company turns 10 in 30 days</b><span style="opacity:.85">Want HBD to plan the anniversary?</span><button class="sbtn g">Plan celebration</button></div>
+          <div class="tiles"><div class="tile"><span>🎂</span>People</div><div class="tile"><span>🚀</span>Beginnings</div><div class="tile"><span>🏆</span>Milestones</div><div class="tile"><span>🏛️</span>Anniversaries</div></div>
+        </div>
+        <div class="tabs"><button class="tab on"><span>🏠</span>Home</button><button class="tab"><span>📅</span>Dates</button><button class="plus" aria-label="New celebration">+</button><button class="tab"><span>🎁</span>Gifts</button><button class="tab"><span>📸</span>Memories</button></div>
+      </div></div><div class="cap">Home</div></div>
+
+      <div class="phone"><div class="device"><div class="screen scr"><div class="notch"></div>
+        <div class="sbody">
+          <div class="hdr"><button class="tab" style="font-size:18px">←</button><span class="logo-s">New celebration</span><span></span></div>
+          <h4>What are you celebrating?</h4>
+          <div class="chips" id="c1"><button class="chip" aria-pressed="true">Person</button><button class="chip" aria-pressed="false">Company</button><button class="chip" aria-pressed="false">Milestone</button><button class="chip" aria-pressed="false">Idea</button><button class="chip" aria-pressed="false">Anniversary</button></div>
+          <div class="field"><span>Date</span><b>12 Dec</b></div>
+          <div class="field"><span>Guests</span><b>40</b></div>
+          <div class="chips" id="c2"><button class="chip gold" aria-pressed="true">Cake</button><button class="chip gold" aria-pressed="true">Flowers</button><button class="chip gold" aria-pressed="false">Photography</button><button class="chip gold" aria-pressed="false">Catering</button></div>
+          <button class="sbtn p" style="margin-top:auto;margin-bottom:14px">Create my celebration</button>
+        </div>
+      </div></div><div class="cap">Celebration planner</div></div>
+
+      <div class="phone"><div class="device"><div class="screen scr"><div class="notch"></div>
+        <div class="sbody">
+          <div class="hdr"><span class="logo-s">HB<i>D</i> Global</span><span class="avatar">A</span></div>
+          <div class="global"><span style="opacity:.8">Celebration across borders</span><div class="route"><span>🇬🇧 London</span><hr><span>🇨🇲 Douala</span></div><b style="font:700 15px Poppins">Mum's 60th birthday</b></div>
+          <div class="chk"><i class="on"></i>Cake and flowers delivered</div>
+          <div class="chk"><i class="on"></i>Photographer booked</div>
+          <div class="chk"><i></i>Video message from family</div>
+          <div class="field"><span>Package</span><b>HBD Premium</b></div>
+          <button class="sbtn p">Send surprise</button>
+          <button class="sbtn o" style="margin-bottom:14px">Share celebration page</button>
+        </div>
+      </div></div><div class="cap">HBD Global</div></div>
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Celebration packages</h2>
+    <div class="grid" style="margin-top:20px">
+      <div class="card"><h3>🎂 HBD Mini</h3><p>Digital card, small gift, cupcakes, message, delivery.</p></div>
+      <div class="card"><h3>🎁 HBD Classic</h3><p>Cake, gift, flowers, balloons, photography, delivery.</p></div>
+      <div class="card"><h3>💎 HBD Premium</h3><p>Decoration, videography, entertainment, surprise coordination.</p></div>
+      <div class="card"><h3>👑 HBD Signature</h3><p>Fully custom: venue, catering, production, guests, digital campaign.</p></div>
+      <div class="card"><h3>🌍 HBD Global</h3><p>One brand coordinating a celebration across countries.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Roadmap</h2>
+    <p class="lead">Start in Cameroon, build for the world.</p>
+    <div class="road">
+      <div class="card"><h3>Celebrations</h3><p>Birthdays and personal celebrations.</p></div>
+      <div class="card"><h3>Milestones</h3><p>Anniversaries, graduations, company milestones.</p></div>
+      <div class="card"><h3>Beginnings</h3><p>Startups, brands, products, ideas.</p></div>
+      <div class="card"><h3>Marketplace</h3><p>Gifts, venues, hotels, travel, entertainment.</p></div>
+      <div class="card"><h3>Global</h3><p>A worldwide celebration network.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Social handles</h2>
+    <p class="lead">Check availability before registering.</p>
+    <div class="row"><button class="chip" style="font-size:14px" aria-pressed="false">@hbdfoundation Instagram</button><button class="chip" style="font-size:14px" aria-pressed="false">@hbdfoundation TikTok</button><button class="chip" style="font-size:14px" aria-pressed="false">@HBDFoundation X</button><button class="chip" style="font-size:14px" aria-pressed="false">HBD Foundation Facebook, YouTube, LinkedIn, WhatsApp</button></div>
+  </div>
+</section>
+
+<footer><div class="wrap">HBD Foundation: Birth is the beginning. Life is the journey. Milestones are the memories. Celebration is how we remember that it mattered.</div></footer>
+
+<script>
+document.querySelectorAll('.chip').forEach(function(c){
+  c.addEventListener('click',function(){
+    var g=c.parentElement;
+    if(g.id==='c1'){g.querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed','false')});c.setAttribute('aria-pressed','true')}
+    else{c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true')}
+  });
+});
+</script>
+</body>
+</html>

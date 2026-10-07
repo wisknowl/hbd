@@ -1,0 +1,31 @@
+{
+  "name": "hbd-foundation-monorepo",
+  "version": "1.0.0",
+  "description": "HBD Foundation — Celebrate What Matters. Global Celebration Brand Architecture.",
+  "private": true,
+  "workspaces": [
+    "client",
+    "mobile",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "preview": "npm run preview --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "mobile": "npm run start --prefix mobile"
+  },
+  "keywords": [
+    "celebration",
+    "hbd-foundation",
+    "milestones",
+    "social",
+    "reel"
+  ],
+  "author": "HBD Foundation",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@expo/vector-icons": "^15.1.1"
+  }
+}

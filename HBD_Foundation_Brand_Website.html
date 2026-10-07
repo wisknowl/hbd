@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HBD Foundation — Celebrate What Matters</title>
+<meta name="description" content="HBD Foundation — a global celebration platform for birthdays, beginnings, milestones, anniversaries and moments worth remembering.">
+<style>
+:root{
+  --purple:#5B2A86; --purple2:#7A43A8; --gold:#F4B942; --coral:#FF6B6B;
+  --cream:#FFF8EE; --ink:#202124; --muted:#6D6875; --white:#fff;
+  --line:rgba(32,33,36,.10); --shadow:0 24px 70px rgba(35,20,55,.12);
+  --radius:28px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--cream);line-height:1.5}
+a{text-decoration:none;color:inherit}
+button,input,select,textarea{font:inherit}
+.container{width:min(1180px,92%);margin:auto}
+.nav{height:82px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:10}
+.logo{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:-1.5px}
+.logo-mark{width:42px;height:42px;border-radius:14px;background:var(--purple);color:white;display:grid;place-items:center;font-weight:950;font-size:14px;box-shadow:0 8px 20px rgba(91,42,134,.25)}
+.logo span{font-size:20px}.logo small{display:block;font-size:8px;letter-spacing:1.8px;color:var(--muted);font-weight:800}
+.navlinks{display:flex;gap:28px;font-size:14px;font-weight:700;color:#514B57}
+.navlinks a:hover{color:var(--purple)}
+.nav-cta{background:var(--purple);color:#fff;border:0;padding:12px 19px;border-radius:999px;font-weight:800;cursor:pointer}
+.hero{position:relative;overflow:hidden;padding:72px 0 92px;background:linear-gradient(135deg,#fff9ef 0%,#fff7ec 55%,#f7edff 100%)}
+.hero:before,.hero:after{content:"";position:absolute;border-radius:50%;filter:blur(1px);pointer-events:none}
+.hero:before{width:390px;height:390px;background:rgba(244,185,66,.20);right:-130px;top:-120px}
+.hero:after{width:300px;height:300px;background:rgba(91,42,134,.10);left:-150px;bottom:-170px}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:60px;position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--purple);background:#efe4f7;padding:8px 13px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
+.dot{width:7px;height:7px;background:var(--gold);border-radius:50%}
+h1{font-size:clamp(52px,7vw,88px);line-height:.94;letter-spacing:-5px;margin:20px 0}
+h1 em{font-style:normal;color:var(--purple)}
+.hero p{font-size:19px;color:#5e5864;max-width:620px}
+.actions{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+.btn{border:0;border-radius:999px;padding:15px 23px;font-weight:850;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--purple);color:white;box-shadow:0 12px 28px rgba(91,42,134,.25)}
+.btn.secondary{background:white;border:1px solid var(--line)}
+.stats{display:flex;gap:28px;margin-top:35px}.stat strong{font-size:24px}.stat span{display:block;color:var(--muted);font-size:12px;font-weight:700}
+.hero-art{min-height:500px;display:grid;place-items:center;position:relative}
+.orbit{width:440px;height:440px;border:1px dashed rgba(91,42,134,.22);border-radius:50%;position:relative}
+.orbit:before{content:"";position:absolute;inset:45px;border:1px solid rgba(244,185,66,.45);border-radius:50%}
+.hero-card{position:absolute;background:#fff;border:1px solid rgba(32,33,36,.07);box-shadow:var(--shadow);border-radius:26px;padding:22px}
+.center-card{width:250px;left:95px;top:95px;text-align:center;transform:rotate(-3deg)}
+.center-card .big{font-size:68px;font-weight:950;line-height:1;color:var(--purple);letter-spacing:-6px}
+.center-card h3{font-size:17px;margin-top:8px}.center-card p{font-size:12px;color:var(--muted);margin-top:4px}
+.float{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:850}
+.float .ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:#f5eafb}
+.f1{top:40px;right:0}.f2{bottom:55px;left:0}.f3{bottom:5px;right:42px}.f4{top:170px;left:-35px}
+.section{padding:92px 0}.section.white{background:#fff}.section-head{display:flex;justify-content:space-between;gap:30px;align-items:end;margin-bottom:38px}.kicker{color:var(--purple);font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:1.5px}.section h2{font-size:46px;line-height:1;letter-spacing:-2.5px;margin-top:8px}.section-head p{max-width:480px;color:var(--muted)}
+.categories{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.category{background:#fff;border:1px solid var(--line);padding:25px 20px;border-radius:22px;transition:.25s;min-height:180px}
+.category:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.category .cat-icon{font-size:30px}.category h3{margin-top:18px;font-size:17px}.category p{font-size:12px;color:var(--muted);margin-top:6px}
+.story{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.story-copy p{color:var(--muted);font-size:17px;margin:18px 0}
+.manifesto{margin-top:28px;padding:25px;border-left:4px solid var(--gold);background:#fff;border-radius:0 20px 20px 0;font-size:22px;font-weight:800}
+.timeline{position:relative;padding:25px;background:linear-gradient(145deg,#5b2a86,#32164e);color:#fff;border-radius:32px;min-height:390px;overflow:hidden;box-shadow:var(--shadow)}
+.timeline:after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;border:1px solid rgba(255,255,255,.18);right:-100px;top:-100px}
+.t-item{display:flex;gap:17px;padding:16px 0;position:relative;z-index:1}.t-num{width:35px;height:35px;border-radius:50%;background:rgba(255,255,255,.13);display:grid;place-items:center;font-weight:900}.t-item h4{font-size:15px}.t-item p{font-size:12px;color:rgba(255,255,255,.65);margin-top:2px}
+.packages{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.package{background:#fff;border:1px solid var(--line);border-radius:25px;padding:25px;position:relative}.package.featured{background:var(--purple);color:#fff;transform:translateY(-10px)}.package .tag{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--gold)}.package h3{font-size:24px;margin:8px 0}.package p{font-size:13px;color:var(--muted)}.featured p{color:rgba(255,255,255,.72)}.package ul{list-style:none;margin-top:20px;display:grid;gap:9px;font-size:12px}.package li:before{content:"✓";font-weight:900;margin-right:8px;color:var(--gold)}
+.mobile-section{background:#f1e8f7;padding:95px 0;overflow:hidden}.mobile-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}.phones{display:flex;justify-content:center;gap:18px;align-items:flex-end}.phone{width:230px;height:470px;background:#101012;border:7px solid #151517;border-radius:36px;padding:7px;box-shadow:0 30px 60px rgba(40,20,60,.22);position:relative}.phone.small{width:195px;height:400px;transform:translateY(35px) rotate(2deg)}.phone-screen{height:100%;border-radius:27px;overflow:hidden;background:#faf6ff;position:relative}.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:82px;height:20px;background:#111;border-radius:0 0 15px 15px;z-index:5}.app-top{padding:35px 15px 10px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:900}.app-top b{font-size:16px}.app-body{padding:10px 13px}.app-greeting{background:linear-gradient(135deg,#5b2a86,#8c52b7);color:white;border-radius:18px;padding:16px}.app-greeting small{opacity:.7}.app-greeting h3{font-size:19px;line-height:1.05;margin-top:4px}.mini-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:900;color:var(--muted);margin:17px 0 8px}.app-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.app-tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px;font-size:9px;font-weight:800}.app-tile span{font-size:19px;display:block;margin-bottom:6px}.event-card{background:#fff;border-radius:16px;padding:11px;display:flex;gap:9px;border:1px solid var(--line);font-size:9px}.event-card .date{width:33px;height:33px;border-radius:10px;background:#f4e9fa;color:var(--purple);display:grid;place-items:center;font-weight:950}.bottom{position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);height:54px;display:flex;justify-content:space-around;align-items:center;font-size:9px;color:var(--muted)}.bottom b{color:var(--purple)}
+.mobile-copy h2{font-size:52px;letter-spacing:-3px;line-height:.98}.mobile-copy>p{color:var(--muted);font-size:17px;margin:20px 0}.feature-list{display:grid;gap:14px;margin-top:25px}.feature{display:flex;gap:13px}.feature .ficon{width:36px;height:36px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none}.feature strong{display:block;font-size:14px}.feature span{font-size:12px;color:var(--muted)}
+.corporate{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}.corp-box{background:#202124;color:white;border-radius:32px;padding:38px;position:relative;overflow:hidden}.corp-box:after{content:"HBD";position:absolute;font-size:170px;font-weight:950;color:rgba(255,255,255,.035);right:-20px;bottom:-65px}.corp-box h3{font-size:38px;line-height:1}.corp-box p{color:#bdb9c0;margin:16px 0 25px;max-width:440px}.corp-pills{display:flex;gap:8px;flex-wrap:wrap}.pill{border:1px solid rgba(255,255,255,.15);border-radius:999px;padding:8px 11px;font-size:11px}
+.planner{background:linear-gradient(135deg,#fff,#f7effb);border:1px solid var(--line);border-radius:34px;padding:38px;box-shadow:var(--shadow)}.planner-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:24px}.choice{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;cursor:pointer;transition:.2s}.choice:hover,.choice.active{border-color:var(--purple);box-shadow:0 10px 25px rgba(91,42,134,.10)}.choice strong{display:block;font-size:14px}.choice span{font-size:11px;color:var(--muted)}
+.cta{padding:100px 0;background:var(--purple);color:#fff;text-align:center;position:relative;overflow:hidden}.cta h2{font-size:clamp(48px,7vw,78px);line-height:.95;letter-spacing:-4px}.cta p{max-width:600px;margin:18px auto;color:rgba(255,255,255,.7);font-size:17px}.cta .btn{background:var(--gold);color:var(--ink)}
+footer{background:#171318;color:#fff;padding:55px 0 30px}.footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:40px}.footer-brand p{color:#99929d;font-size:13px;max-width:300px;margin-top:12px}.footer h4{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#aaa;margin-bottom:14px}.footer a{display:block;color:#c8c3ca;font-size:13px;margin:9px 0}.copyright{border-top:1px solid rgba(255,255,255,.1);margin-top:40px;padding-top:20px;color:#777;font-size:11px;display:flex;justify-content:space-between}
+.modal{position:fixed;inset:0;background:rgba(20,12,25,.65);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}.modal.open{display:flex}.modal-card{background:#fff;width:min(620px,100%);border-radius:28px;padding:30px;position:relative}.close{position:absolute;right:20px;top:16px;border:0;background:#f3edf6;width:35px;height:35px;border-radius:50%;cursor:pointer}.form{display:grid;gap:13px;margin-top:20px}.form input,.form select,.form textarea{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:13px;outline:none}.form textarea{min-height:80px;resize:vertical}.form .btn{justify-content:center}
+@media(max-width:900px){
+ .navlinks{display:none}.hero-grid,.story,.mobile-grid,.corporate{grid-template-columns:1fr}.hero{padding-top:45px}.hero-art{min-height:420px}.categories{grid-template-columns:repeat(2,1fr)}.packages{grid-template-columns:repeat(2,1fr)}.package.featured{transform:none}.mobile-copy{order:-1}.footer-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+ .nav{height:70px}.logo span{font-size:17px}.logo-mark{width:38px;height:38px}.nav-cta{padding:10px 14px;font-size:12px}
+ h1{font-size:53px;letter-spacing:-3.5px}.hero p{font-size:16px}.stats{gap:18px}.stat strong{font-size:19px}
+ .orbit{width:310px;height:310px}.center-card{width:190px;left:60px;top:60px;padding:17px}.center-card .big{font-size:53px}.f4{left:-15px}.f1{right:-10px}.f2{left:-10px}.f3{right:0}
+ .section{padding:65px 0}.section h2,.mobile-copy h2{font-size:40px}.section-head{display:block}.section-head p{margin-top:12px}.categories,.packages,.planner-grid{grid-template-columns:1fr 1fr}.category{min-height:155px;padding:18px 15px}
+ .phones{gap:5px}.phone{width:185px;height:390px}.phone.small{width:160px;height:340px}.mobile-grid{gap:40px}
+ .corp-box{padding:27px}.corp-box h3{font-size:31px}.planner{padding:23px}.footer-grid{grid-template-columns:1fr 1fr}.copyright{display:block}.copyright span{display:block;margin-top:8px}
+}
+</style>
+</head>
+<body>
+
+<header class="container nav">
+  <a class="logo" href="#">
+    <div class="logo-mark">HBD</div>
+    <div><span>HBD Foundation</span><small>HAPPY BIRTHDAY FOUNDATION</small></div>
+  </a>
+  <nav class="navlinks">
+    <a href="#celebrate">Celebrate</a><a href="#story">Our idea</a><a href="#packages">Experiences</a><a href="#app">HBD App</a><a href="#corporate">Corporate</a>
+  </nav>
+  <button class="nav-cta" onclick="openPlanner()">Plan a celebration</button>
+</header>
+
+<main>
+<section class="hero">
+ <div class="container hero-grid">
+  <div>
+   <div class="eyebrow"><span class="dot"></span> The global celebration brand</div>
+   <h1>Celebrate<br><em>what matters.</em></h1>
+   <p>Birthdays. Beginnings. Milestones. Anniversaries. Achievements. HBD turns meaningful moments into celebrations worth remembering.</p>
+   <div class="actions"><button class="btn primary" onclick="openPlanner()">Create a celebration →</button><a class="btn secondary" href="#celebrate">Explore HBD</a></div>
+   <div class="stats"><div class="stat"><strong>01</strong><span>Moment worth celebrating</span></div><div class="stat"><strong>∞</strong><span>Ways to celebrate</span></div><div class="stat"><strong>🌍</strong><span>Built to go global</span></div></div>
+  </div>
+  <div class="hero-art">
+   <div class="orbit">
+    <div class="hero-card center-card"><div class="big">HBD</div><h3>Celebrate what matters.</h3><p>Because every meaningful beginning deserves to be remembered.</p></div>
+    <div class="hero-card float f1"><div class="ico">🎂</div>Birthday</div>
+    <div class="hero-card float f2"><div class="ico">🚀</div>New beginning</div>
+    <div class="hero-card float f3"><div class="ico">🏆</div>Milestone</div>
+    <div class="hero-card float f4"><div class="ico">💡</div>Idea born</div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="section" id="celebrate">
+ <div class="container">
+  <div class="section-head"><div><div class="kicker">What HBD celebrates</div><h2>More than birthdays.</h2></div><p>“Birthday” is our starting language for the moment something came into existence. HBD celebrates the journey that follows.</p></div>
+  <div class="categories">
+   <article class="category"><div class="cat-icon">🎂</div><h3>People</h3><p>Birthdays, personal stories and the lives worth honoring.</p></article>
+   <article class="category"><div class="cat-icon">🚀</div><h3>Beginnings</h3><p>New businesses, products, ideas, projects and movements.</p></article>
+   <article class="category"><div class="cat-icon">🏆</div><h3>Milestones</h3><p>Achievements, breakthroughs and moments of progress.</p></article>
+   <article class="category"><div class="cat-icon">📅</div><h3>Anniversaries</h3><p>Years of love, work, growth, service and existence.</p></article>
+   <article class="category"><div class="cat-icon">💡</div><h3>Ideas</h3><p>The birth of a thought that became something real.</p></article>
+  </div>
+ </div>
+</section>
+
+<section class="section white" id="story">
+ <div class="container story">
+  <div class="story-copy">
+   <div class="kicker">The HBD philosophy</div><h2>Every meaningful thing has a beginning.</h2>
+   <p>A person is born. An idea is born. A company is born. A relationship begins. A dream becomes reality. Then time passes — and milestones appear.</p>
+   <p>HBD exists to make those moments visible, memorable and worthy of celebration.</p>
+   <div class="manifesto">“Birth is the beginning. Life is the journey. Milestones are the memories. Celebration is how we remember that it mattered.”</div>
+  </div>
+  <div class="timeline">
+   <div class="kicker" style="color:#F4B942">From beginning to legacy</div>
+   <div class="t-item"><div class="t-num">01</div><div><h4>Something is born</h4><p>A person, idea, company, product or dream enters the world.</p></div></div>
+   <div class="t-item"><div class="t-num">02</div><div><h4>It grows</h4><p>Time creates stories, relationships, progress and meaning.</p></div></div>
+   <div class="t-item"><div class="t-num">03</div><div><h4>A milestone arrives</h4><p>One year. Ten years. A breakthrough. A first. A million.</p></div></div>
+   <div class="t-item"><div class="t-num">04</div><div><h4>HBD celebrates it</h4><p>We turn the moment into an experience people can remember.</p></div></div>
+   <div class="t-item"><div class="t-num">05</div><div><h4>The memory remains</h4><p>Photos, stories, videos and archives become part of the legacy.</p></div></div>
+  </div>
+ </div>
+</section>
+
+<section class="section" id="packages">
+ <div class="container">
+  <div class="section-head"><div><div class="kicker">Celebration experiences</div><h2>From simple to extraordinary.</h2></div><p>Start with a small surprise or let HBD orchestrate a complete celebration across people, places and services.</p></div>
+  <div class="packages">
+   <article class="package"><div class="tag">Simple</div><h3>Mini</h3><p>For a meaningful moment that doesn't need a huge production.</p><ul><li>Digital card</li><li>Small gift</li><li>Cake or treats</li><li>Message & delivery</li></ul></article>
+   <article class="package featured"><div class="tag">Most loved</div><h3>Classic</h3><p>A complete personal celebration with the details handled.</p><ul><li>Cake & gift</li><li>Flowers</li><li>Personalized message</li><li>Photography</li><li>Surprise delivery</li></ul></article>
+   <article class="package"><div class="tag">Premium</div><h3>Signature</h3><p>For milestones and moments that deserve a bigger stage.</p><ul><li>Premium gifts</li><li>Event decoration</li><li>Photo & video</li><li>Entertainment</li><li>Event coordination</li></ul></article>
+   <article class="package"><div class="tag">Global</div><h3>HBD Global</h3><p>Celebrate someone, somewhere else. HBD coordinates the experience.</p><ul><li>Cross-border planning</li><li>Local partners</li><li>Gifts & experiences</li><li>Remote messages</li><li>Full coordination</li></ul></article>
+  </div>
+ </div>
+</section>
+
+<section class="mobile-section" id="app">
+ <div class="container mobile-grid">
+  <div class="phones">
+   <div class="phone"><div class="phone-screen"><div class="notch"></div><div class="app-top"><b>HBD</b><span>⌕　♡</span></div><div class="app-body"><div class="app-greeting"><small>GOOD MORNING</small><h3>What are you celebrating?</h3></div><div class="mini-title">Create a moment</div><div class="app-grid"><div class="app-tile"><span>🎂</span>Birthday</div><div class="app-tile"><span>🚀</span>Beginning</div><div class="app-tile"><span>🏆</span>Milestone</div><div class="app-tile"><span>📅</span>Anniversary</div></div><div class="mini-title">Coming up</div><div class="event-card"><div class="date">18<br><small>OCT</small></div><div><b>Mum's birthday</b><br><span>Classic celebration · 6 days</span></div></div></div><div class="bottom"><b>⌂<br>Home</b><span>＋<br>Create</span><span>♡<br>Memories</span><span>☺<br>Profile</span></div></div></div>
+   <div class="phone small"><div class="phone-screen"><div class="notch"></div><div class="app-top"><b>Create</b><span>×</span></div><div class="app-body"><div class="mini-title">I want to celebrate...</div><div class="app-grid"><div class="app-tile"><span>🎂</span>Someone</div><div class="app-tile"><span>🏢</span>Company</div><div class="app-tile"><span>💡</span>Idea</div><div class="app-tile"><span>🏆</span>Achievement</div></div><div class="mini-title">Your date</div><div class="event-card"><div class="date">24<br><small>JUN</small></div><div><b>Choose a date</b><br><span>We'll help plan the rest.</span></div></div><button class="btn primary" style="width:100%;margin-top:15px;justify-content:center;font-size:11px">Build my celebration</button></div></div></div>
+  </div>
+  <div class="mobile-copy">
+   <div class="kicker">The future of HBD</div><h2>Your moments, always with you.</h2>
+   <p>The HBD app turns important dates into opportunities to celebrate. Save moments, plan experiences, send gifts and preserve memories.</p>
+   <div class="feature-list">
+    <div class="feature"><div class="ficon">🔔</div><div><strong>Never forget a meaningful date</strong><span>Birthday and milestone reminders for the people and things that matter.</span></div></div>
+    <div class="feature"><div class="ficon">🎁</div><div><strong>Celebrate in a few taps</strong><span>Choose an experience and let HBD coordinate the details.</span></div></div>
+    <div class="feature"><div class="ficon">📸</div><div><strong>Build your memory vault</strong><span>Keep celebration photos, videos and stories together.</span></div></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="section white" id="corporate">
+ <div class="container corporate">
+  <div>
+   <div class="kicker">HBD Corporate</div><h2>Companies have birthdays too.</h2>
+   <p style="color:var(--muted);font-size:17px;margin-top:18px">From employee birthdays to 25-year anniversaries, product launches and million-user milestones, HBD gives organizations a way to celebrate the story they are building.</p>
+   <div class="actions"><button class="btn primary" onclick="openPlanner('Corporate')">Plan a corporate celebration →</button></div>
+  </div>
+  <div class="corp-box"><h3>Your company has a story.</h3><p>Let HBD turn the chapters of that story into moments your team, customers and community will remember.</p><div class="corp-pills"><span class="pill">Employee birthdays</span><span class="pill">Company anniversaries</span><span class="pill">Product launches</span><span class="pill">Milestones</span><span class="pill">Awards</span><span class="pill">Founder's day</span></div></div>
+ </div>
+</section>
+
+<section class="section">
+ <div class="container">
+  <div class="planner" id="planner">
+   <div class="kicker">Start anywhere</div><h2>What are you celebrating?</h2>
+   <p style="color:var(--muted);margin-top:10px">Tell us what matters. HBD will help turn it into a celebration.</p>
+   <div class="planner-grid">
+    <div class="choice" onclick="selectChoice(this)"><strong>🎂 A person</strong><span>Birthday or life celebration</span></div>
+    <div class="choice" onclick="selectChoice(this)"><strong>🚀 A beginning</strong><span>Idea, business, product or project</span></div>
+    <div class="choice" onclick="selectChoice(this)"><strong>🏆 A milestone</strong><span>Achievement or breakthrough</span></div>
+    <div class="choice" onclick="selectChoice(this)"><strong>📅 An anniversary</strong><span>Relationship, company or organization</span></div>
+   </div>
+   <button class="btn primary" style="margin-top:20px" onclick="openPlanner()">Continue →</button>
+  </div>
+ </div>
+</section>
+
+<section class="cta">
+ <div class="container"><h2>Something worth celebrating?</h2><p>Tell HBD what happened, why it matters and when it happened. We'll help you make the moment unforgettable.</p><button class="btn" onclick="openPlanner()">Create your celebration →</button></div>
+</section>
+</main>
+
+<footer>
+ <div class="container">
+  <div class="footer-grid">
+   <div class="footer-brand"><a class="logo" href="#"><div class="logo-mark">HBD</div><div><span style="color:#fff">HBD Foundation</span><small style="color:#777">HAPPY BIRTHDAY FOUNDATION</small></div></a><p>Celebrating people, beginnings, milestones and the moments that matter — everywhere.</p></div>
+   <div><h4>Celebrate</h4><a href="#celebrate">Birthdays</a><a href="#celebrate">Beginnings</a><a href="#celebrate">Milestones</a><a href="#celebrate">Anniversaries</a></div>
+   <div><h4>HBD</h4><a href="#story">Our idea</a><a href="#app">HBD App</a><a href="#corporate">Corporate</a><a href="#">HBD Community</a></div>
+   <div><h4>Connect</h4><a href="#">Instagram</a><a href="#">TikTok</a><a href="#">YouTube</a><a href="#">LinkedIn</a></div>
+  </div>
+  <div class="copyright"><span>© 2026 HBD Foundation. Celebrate what matters.</span><span>Global celebration platform</span></div>
+ </div>
+</footer>
+
+<div class="modal" id="modal">
+ <div class="modal-card">
+  <button class="close" onclick="closePlanner()">×</button>
+  <div class="kicker">HBD Celebration Planner</div><h2 style="font-size:36px;letter-spacing:-2px;margin-top:7px">Let's celebrate it.</h2>
+  <p style="color:var(--muted);margin-top:6px">Tell us a little about the moment. This prototype shows the future HBD booking experience.</p>
+  <form class="form" onsubmit="submitForm(event)">
+   <input id="type" placeholder="What are you celebrating? e.g. Birthday, company anniversary..." required>
+   <input placeholder="Who or what are we celebrating?" required>
+   <input type="date" required>
+   <input placeholder="Location / city / country" required>
+   <select><option>Select your celebration scale</option><option>Simple surprise</option><option>Classic celebration</option><option>Premium / event</option><option>Global / corporate</option></select>
+   <textarea placeholder="Tell HBD anything important about the moment..."></textarea>
+   <button class="btn primary" type="submit">Send celebration request →</button>
+  </form>
+  <p id="success" style="display:none;color:var(--purple);font-weight:800;margin-top:14px">🎉 Request captured in this prototype. HBD would now connect you with a celebration specialist.</p>
+ </div>
+</div>
+
+<script>
+function openPlanner(type=""){
+ document.getElementById('modal').classList.add('open');
+ if(type) document.getElementById('type').value=type;
+}
+function closePlanner(){document.getElementById('modal').classList.remove('open')}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closePlanner()});
+function selectChoice(el){document.querySelectorAll('.choice').forEach(x=>x.classList.remove('active'));el.classList.add('active')}
+function submitForm(e){e.preventDefault();document.getElementById('success').style.display='block';e.target.querySelector('button').textContent='Celebration request received ✓';}
+</script>
+</body>
+</html>
