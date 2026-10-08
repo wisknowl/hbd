@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { HBD_THEME } from '../theme';
+import { ScreenLayout } from '../components/ScreenLayout';
 
 interface FriendsScreenProps {
   onOpenGiftsForFriend: (friendName: string) => void;
@@ -119,7 +120,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenLayout safeTop safeBottom={false}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -300,7 +301,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </ScreenLayout>
   );
 };
 

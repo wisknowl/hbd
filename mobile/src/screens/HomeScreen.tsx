@@ -1,28 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  Image,
-  Dimensions
+  FlatList, 
+  Dimensions, 
+  Image, 
+  TouchableOpacity,
+  StatusBar,
+  Platform,
+  LayoutChangeEvent
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../context/ThemeContext';
 import { FloatingCelebrateButton } from '../components/FloatingCelebrateButton';
-import { CelebrationReelScreen } from './CelebrationReelScreen';
-import type { ReelPost, ReminderItem } from '../../../shared/types';
+import type { ReelPost, CelebrationCategory } from '../../../shared/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+type HomeFeedTab = 'moments' | 'friends' | 'celebrations';
 
 interface HomeScreenProps {
   reels: ReelPost[];
   onCheerReel: (id: string) => void;
   onOpenPlanner: (celebrant?: string) => void;
   onOpenGifts: (celebrant: string) => void;
-  onNavigateToInbox: () => void;
+  onNavigateToInbox?: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -30,379 +34,527 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onCheerReel,
   onOpenPlanner,
   onOpenGifts,
-  onNavigateToInbox,
 }) => {
-  const { colors, typography, borderRadius, isDark, toggleTheme } = useAppTheme();
-  const [viewMode, setViewMode] = useState<'deck' | 'feed'>('deck');
+  const insets = useSafeAreaInsets();
+  const { colors, typography, borderRadius } = useAppTheme();
+  
+  // Top Feed Tabs: Moments | Friends | Celebrations
+  const [activeTab, setActiveTab] = useState<HomeFeedTab>('moments');
+  const [activeCategory, setActiveCategory] = useState<string>('ALL');
+  const [containerHeight, setContainerHeight] = useState<number>(Dimensions.get('window').height - 70);
 
-  // Coming up milestones matching user's design reference
-  const comingUpItems = [
-    {
-      id: 'mama-60',
-      title: "Mama's 60th",
-      icon: '🎂',
-      timeText: '12 days',
-      celebrant: 'Mama Chantal',
-    },
-    {
-      id: 'anniv-20',
-      title: '20 years together',
-      icon: '💍',
-      timeText: '41 days',
-      celebrant: 'Amina & Tariq',
-    },
-    {
-      id: 'grad-amina',
-      title: "Amina's graduation",
-      icon: '🎓',
-      timeText: '3 months',
-      celebrant: 'Amina',
-    },
-    {
-      id: 'sarah-bday',
-      title: "Sarah's 30th",
-      icon: '✨',
-      timeText: '16 days',
-      celebrant: 'Sarah Johnson',
-    }
+  const categories = [
+    { key: 'ALL', label: 'All Joy' },
+    { key: 'BIRTHDAY', label: '🎂 Birthdays' },
+    { key: 'BEGINNING', label: '🚀 Beginnings' },
+    { key: 'MILESTONE', label: '🏆 Milestones' },
+    { key: 'ANNIVERSARY', label: '💍 Anniversaries' }
   ];
 
-  if (viewMode === 'feed') {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#000000' }}>
-        <CelebrationReelScreen
-          reels={reels}
-          onCheer={onCheerReel}
-          onOpenPlanner={(reel) => onOpenPlanner(reel.user.fullName)}
-          onOpenGifts={onOpenGifts}
-        />
-        {/* Switch back button */}
-        <SafeAreaView style={styles.feedSwitchOverlay}>
-          <TouchableOpacity 
-            style={styles.backToDeckBtn}
-            onPress={() => setViewMode('deck')}
-          >
-            <Feather name="arrow-left" size={16} color="#FFFFFF" />
-            <Text style={styles.backToDeckText}>Home Deck</Text>
-          </TouchableOpacity>
-        </SafeAreaView>
-      </View>
-    );
-  }
+  // Dynamic filtering based on top tab + category
+  const filteredReels = useMemo(() => {
+    return reels.filter(r => {
+      // Category filter
+      if (activeCategory !== 'ALL' && r.category !== activeCategory) {
+        return false;
+      }
+      // Top tab filter
+      if (activeTab === 'friends') {
+        // Friends / Circle: posts with personal connection / circle badge
+        return r.user.celebrationsCount >= 8 || r.id === 'm-reel-1';
+      }
+      if (activeTab === 'celebrations') {
+        // Grand public milestones & beginning celebrations
+        return r.category === 'MILESTONE' || r.category === 'BEGINNING';
+      }
+      // Moments: default comprehensive joyful feed
+      return true;
+    });
+  }, [reels, activeTab, activeCategory]);
 
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        
-        {/* Top Header */}
-        <View style={styles.topHeader}>
-          <View>
-            <View style={styles.greetingRow}>
-              <Text style={[styles.greetingText, { color: colors.purple }]}>Hello</Text>
-              <Text style={styles.waveEmoji}>👋</Text>
+  const handleLayout = (e: LayoutChangeEvent) => {
+    const { height } = e.nativeEvent.layout;
+    if (height > 0 && Math.abs(height - containerHeight) > 2) {
+      setContainerHeight(height);
+    }
+  };
+
+  const topInset = Math.max(
+    insets.top, 
+    Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44
+  );
+
+  const renderReelItem = ({ item }: { item: ReelPost }) => (
+    <View style={[styles.reelContainer, { height: containerHeight }]}>
+      {/* Background Media */}
+      <Image 
+        source={{ uri: item.mediaUrl }} 
+        style={styles.backgroundMedia} 
+        resizeMode="cover"
+      />
+      
+      {/* Gradient overlays */}
+      <View style={styles.topVignette} />
+      <View style={styles.bottomVignette} />
+
+      {/* Celebration Badge Banner */}
+      <View style={[styles.badgeBanner, { top: topInset + 88 }]}>
+        <View style={styles.badgePill}>
+          <Feather name="star" size={12} color="#F4B942" style={{ marginRight: 6 }} />
+          <Text style={styles.badgeText}>{item.celebrationBadge || '✨ Celebration Moment'}</Text>
+        </View>
+      </View>
+
+      {/* Right Interaction Rail */}
+      <View style={styles.actionRail}>
+        {/* Cheer (Heart / Confetti) */}
+        <TouchableOpacity 
+          style={[styles.actionBtn, item.isCheered && styles.actionBtnCheered]} 
+          onPress={() => onCheerReel(item.id)}
+          activeOpacity={0.8}
+        >
+          <Feather 
+            name="heart" 
+            size={22} 
+            color={item.isCheered ? '#FFFFFF' : '#FFFFFF'} 
+          />
+        </TouchableOpacity>
+        <Text style={styles.actionCount}>
+          {item.cheerCount > 1000 ? `${(item.cheerCount / 1000).toFixed(1)}k` : item.cheerCount}
+        </Text>
+        <Text style={styles.actionLabel}>Cheers</Text>
+
+        {/* Gift Button */}
+        <TouchableOpacity 
+          style={[styles.actionBtn, styles.giftBtn]}
+          onPress={() => onOpenGifts(item.user.fullName)}
+          activeOpacity={0.8}
+        >
+          <Feather name="gift" size={20} color="#202124" />
+        </TouchableOpacity>
+        <Text style={[styles.actionCount, { color: '#F4B942' }]}>Gift</Text>
+        <Text style={styles.actionLabel}>Presents</Text>
+
+        {/* Celebrate / Plan Button */}
+        <TouchableOpacity 
+          style={[styles.actionBtn, { backgroundColor: '#5B2A86' }]}
+          onPress={() => onOpenPlanner(item.user.fullName)}
+          activeOpacity={0.8}
+        >
+          <Feather name="calendar" size={19} color="#FFF8EE" />
+        </TouchableOpacity>
+        <Text style={styles.actionCount}>Plan</Text>
+        <Text style={styles.actionLabel}>Drop</Text>
+
+        {/* Share Button */}
+        <TouchableOpacity 
+          style={styles.actionBtn}
+          activeOpacity={0.8}
+        >
+          <Feather name="share-2" size={19} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={styles.actionCount}>{item.shareCount || 94}</Text>
+        <Text style={styles.actionLabel}>Share</Text>
+      </View>
+
+      {/* Bottom Creator Info & Caption */}
+      <View style={styles.bottomOverlay}>
+        <View style={styles.creatorRow}>
+          <Image 
+            source={{ uri: item.user.avatarUrl }} 
+            style={styles.avatar} 
+          />
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.creatorName}>{item.user.fullName}</Text>
+              <View style={styles.verifiedBadge}>
+                <Text style={styles.verifiedCheck}>✓</Text>
+              </View>
             </View>
-            <Text style={[styles.questionText, { color: colors.purple }]}>
-              What's worth{'\n'}celebrating?
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.handle}>@{item.user.handle}</Text>
+              {item.user.location && (
+                <>
+                  <Text style={styles.dotSeparator}>•</Text>
+                  <Text style={styles.locationText}>{item.user.location}</Text>
+                </>
+              )}
+            </View>
+          </View>
+        </View>
+
+        <Text style={styles.caption} numberOfLines={3}>
+          {item.caption}
+        </Text>
+
+        {item.audioTrack && (
+          <View style={styles.audioPill}>
+            <Feather name="music" size={12} color="#F4B942" />
+            <Text style={styles.audioTitle} numberOfLines={1}>
+              {item.audioTrack}
             </Text>
           </View>
+        )}
+      </View>
+    </View>
+  );
 
-          <View style={styles.topActionsRow}>
-            {/* View Mode Toggle (Feed vs Deck) */}
-            <TouchableOpacity 
-              style={[styles.iconBtn, { backgroundColor: colors.purpleSoft }]}
-              onPress={() => setViewMode('feed')}
-            >
-              <Feather name="film" size={18} color={colors.purple} />
-            </TouchableOpacity>
+  return (
+    <View style={styles.container} onLayout={handleLayout}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-            {/* Dark/Light Mode Toggle */}
-            <TouchableOpacity 
-              style={[styles.iconBtn, { backgroundColor: colors.purpleSoft }]}
-              onPress={toggleTheme}
-            >
-              <Feather name={isDark ? "sun" : "moon"} size={18} color={colors.purple} />
-            </TouchableOpacity>
-          </View>
-        </View>
+      {/* Full-bleed Vertical Scroll Feed */}
+      <FlatList
+        data={filteredReels}
+        renderItem={renderReelItem}
+        keyExtractor={item => item.id}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        snapToInterval={containerHeight}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        disableIntervalMomentum
+        getItemLayout={(_, index) => ({
+          length: containerHeight,
+          offset: containerHeight * index,
+          index,
+        })}
+      />
 
-        {/* Hero Milestone Card (from Screenshot) */}
-        <View style={[styles.heroCard, { backgroundColor: colors.purple }]}>
-          <Text style={styles.heroTimeLabel}>In 30 days</Text>
-          <Text style={styles.heroMilestoneTitle}>Your company turns 10</Text>
-          
+      {/* Top Header Overlay: Safe Area Aware */}
+      <View 
+        style={[
+          styles.topHeaderOverlay, 
+          { paddingTop: topInset + 6 }
+        ]} 
+        pointerEvents="box-none"
+      >
+        {/* Top 3 Navigation Links: Moments | Friends | Celebrations */}
+        <View style={styles.topTabsBar}>
+          {/* Tab 1: Moments */}
           <TouchableOpacity 
-            style={[styles.heroActionBtn, { backgroundColor: colors.gold }]}
-            onPress={() => onOpenPlanner('Kaba Technologies 10th Anniversary')}
-            activeOpacity={0.88}
+            onPress={() => setActiveTab('moments')}
+            style={styles.topTabBtn}
+            activeOpacity={0.7}
           >
-            <Text style={styles.heroActionBtnText}>Create the celebration</Text>
+            <Text style={[
+              styles.topTabText, 
+              activeTab === 'moments' && styles.topTabTextActive
+            ]}>
+              Moments
+            </Text>
+            {activeTab === 'moments' && <View style={styles.topTabUnderline} />}
+          </TouchableOpacity>
+
+          <View style={styles.tabDividerDot} />
+
+          {/* Tab 2: Friends */}
+          <TouchableOpacity 
+            onPress={() => setActiveTab('friends')}
+            style={styles.topTabBtn}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              styles.topTabText, 
+              activeTab === 'friends' && styles.topTabTextActive
+            ]}>
+              Friends
+            </Text>
+            {activeTab === 'friends' && <View style={styles.topTabUnderline} />}
+          </TouchableOpacity>
+
+          <View style={styles.tabDividerDot} />
+
+          {/* Tab 3: Celebrations */}
+          <TouchableOpacity 
+            onPress={() => setActiveTab('celebrations')}
+            style={styles.topTabBtn}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              styles.topTabText, 
+              activeTab === 'celebrations' && styles.topTabTextActive
+            ]}>
+              Celebrations
+            </Text>
+            {activeTab === 'celebrations' && <View style={styles.topTabUnderline} />}
           </TouchableOpacity>
         </View>
 
-        {/* Coming Up Section (from Screenshot) */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={[styles.sectionTitle, { color: colors.muted }]}>Coming up</Text>
-          <TouchableOpacity onPress={() => setViewMode('feed')} style={styles.seeFeedLink}>
-            <Feather name="play-circle" size={13} color={colors.purple} />
-            <Text style={[styles.seeFeedLinkText, { color: colors.purple }]}>Watch Reels</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.cardsCol}>
-          {comingUpItems.map((item) => (
-            <TouchableOpacity 
-              key={item.id} 
+        {/* Micro Category Pills Strip */}
+        <View style={styles.categoryScroll}>
+          {categories.map(cat => (
+            <TouchableOpacity
+              key={cat.key}
+              onPress={() => setActiveCategory(cat.key)}
               style={[
-                styles.itemCard, 
-                { backgroundColor: colors.card, borderColor: colors.line }
+                styles.categoryChip,
+                activeCategory === cat.key && styles.categoryChipActive
               ]}
-              onPress={() => onOpenGifts(item.celebrant)}
               activeOpacity={0.8}
             >
-              <View style={styles.itemLeft}>
-                <View style={[styles.iconBadge, { backgroundColor: colors.gold }]}>
-                  <Text style={styles.iconEmoji}>{item.icon}</Text>
-                </View>
-                <Text style={[styles.itemTitle, { color: colors.fg }]}>{item.title}</Text>
-              </View>
-
-              <Text style={[styles.itemTime, { color: colors.coral }]}>{item.timeText}</Text>
+              <Text style={[
+                styles.categoryChipText,
+                activeCategory === cat.key && styles.categoryChipTextActive
+              ]}>
+                {cat.label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
+      </View>
 
-        {/* Action Prompt Card */}
-        <View style={[styles.promptCard, { backgroundColor: colors.purpleSoft, borderColor: colors.line }]}>
-          <View style={styles.promptLeft}>
-            <Feather name="gift" size={24} color={colors.purple} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.promptTitle, { color: colors.purple }]}>
-                Send a surprise across borders
-              </Text>
-              <Text style={[styles.promptSub, { color: colors.muted }]}>
-                Amazon gifts, fresh cakes, or diaspora surprises in Africa & worldwide.
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity 
-            style={[styles.promptBtn, { backgroundColor: colors.purple }]}
-            onPress={() => onOpenGifts('Mama Chantal')}
-          >
-            <Text style={styles.promptBtnText}>Gift Ideas</Text>
-          </TouchableOpacity>
-        </View>
-
-      </ScrollView>
-
-      {/* Floating Celebrate Action Button at Bottom Right Corner */}
-      <FloatingCelebrateButton onPress={() => onOpenPlanner('')} />
-    </SafeAreaView>
+      {/* Floating Celebrate Action Button */}
+      <FloatingCelebrateButton 
+        onPress={() => onOpenPlanner()} 
+        bottomOffset={18}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0D0814',
   },
-  scroll: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 90,
+  reelContainer: {
+    width: SCREEN_WIDTH,
+    position: 'relative',
+    justifyContent: 'flex-end',
+    backgroundColor: '#0D0814',
   },
-  topHeader: {
+  backgroundMedia: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  topVignette: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 180,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+  bottomVignette: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 320,
+    backgroundColor: 'rgba(10, 6, 16, 0.72)',
+  },
+  topHeaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 30,
+  },
+  topTabsBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-    marginTop: 8,
-  },
-  greetingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  greetingText: {
-    fontSize: 24,
-    fontFamily: 'Poppins-Bold',
-    lineHeight: 30,
-  },
-  waveEmoji: {
-    fontSize: 24,
-  },
-  questionText: {
-    fontSize: 26,
-    fontFamily: 'Poppins-Bold',
-    lineHeight: 32,
-    letterSpacing: -0.5,
-    marginTop: 2,
-  },
-  topActionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 16,
+    gap: 16,
   },
-  heroCard: {
-    borderRadius: 24,
-    paddingHorizontal: 22,
-    paddingVertical: 24,
-    marginBottom: 24,
-    shadowColor: '#5B2A86',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 5,
+  topTabBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    position: 'relative',
   },
-  heroTimeLabel: {
-    fontSize: 13,
-    fontFamily: 'Inter-Medium',
+  topTabText: {
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: -0.2,
+  },
+  topTabTextActive: {
+    color: '#FFF8EE',
+    fontWeight: '800',
+    fontSize: 17,
+  },
+  topTabUnderline: {
+    position: 'absolute',
+    bottom: 0,
+    width: 22,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: '#F4B942',
+  },
+  tabDividerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  categoryScroll: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    marginTop: 10,
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  categoryChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    backgroundColor: 'rgba(20, 14, 30, 0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  categoryChipActive: {
+    backgroundColor: '#5B2A86',
+    borderColor: '#F4B942',
+  },
+  categoryChipText: {
     color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  categoryChipTextActive: {
+    color: '#FFF8EE',
+    fontWeight: '700',
+  },
+  badgeBanner: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 10,
+  },
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(15, 10, 25, 0.75)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 185, 66, 0.4)',
+  },
+  badgeText: {
+    color: '#FFF8EE',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  actionRail: {
+    position: 'absolute',
+    right: 12,
+    bottom: 40,
+    alignItems: 'center',
+    gap: 8,
+    zIndex: 20,
+  },
+  actionBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(25, 18, 35, 0.75)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionBtnCheered: {
+    backgroundColor: '#FF6B6B',
+    borderColor: '#FFFFFF',
+  },
+  giftBtn: {
+    backgroundColor: '#F4B942',
+    borderColor: '#FFE39B',
+  },
+  actionCount: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: -4,
+  },
+  actionLabel: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 10,
+    fontWeight: '500',
+    marginTop: -6,
     marginBottom: 4,
   },
-  heroMilestoneTitle: {
-    fontSize: 20,
-    fontFamily: 'Poppins-Bold',
+  bottomOverlay: {
+    paddingHorizontal: 18,
+    paddingBottom: 28,
+    width: '80%',
+    zIndex: 15,
+  },
+  creatorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 2,
+    borderColor: '#F4B942',
+  },
+  creatorName: {
     color: '#FFFFFF',
-    letterSpacing: -0.4,
-    marginBottom: 18,
-  },
-  heroActionBtn: {
-    borderRadius: 999,
-    paddingVertical: 13,
-    paddingHorizontal: 24,
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroActionBtnText: {
-    color: '#1A1A1A',
-    fontSize: 14,
-    fontFamily: 'Poppins-Bold',
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    textTransform: 'none',
-  },
-  seeFeedLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  seeFeedLinkText: {
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-  },
-  cardsCol: {
-    gap: 12,
-    marginBottom: 20,
-  },
-  itemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 18,
-    borderWidth: 1,
-    shadowColor: '#5B2A86',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  itemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    flex: 1,
-  },
-  iconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconEmoji: {
-    fontSize: 22,
-  },
-  itemTitle: {
     fontSize: 15,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
-  itemTime: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
+  handle: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 12,
   },
-  promptCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: 16,
-    flexDirection: 'row',
+  dotSeparator: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 12,
+  },
+  locationText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  verifiedBadge: {
+    backgroundColor: '#F4B942',
+    borderRadius: 7,
+    width: 14,
+    height: 14,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
+    justifyContent: 'center',
+  },
+  verifiedCheck: {
+    color: '#202124',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  caption: {
+    color: 'rgba(255, 255, 255, 0.95)',
+    fontSize: 13,
+    lineHeight: 19,
     marginBottom: 10,
   },
-  promptLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  promptTitle: {
-    fontSize: 13,
-    fontFamily: 'Poppins-Bold',
-    marginBottom: 2,
-  },
-  promptSub: {
-    fontSize: 11,
-    fontFamily: 'Inter-Regular',
-    lineHeight: 15,
-  },
-  promptBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-  },
-  promptBtnText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontFamily: 'Inter-Bold',
-  },
-  feedSwitchOverlay: {
-    position: 'absolute',
-    top: 10,
-    left: 16,
-    zIndex: 99,
-  },
-  backToDeckBtn: {
+  audioPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(23, 20, 28, 0.85)',
-    paddingVertical: 6,
+    backgroundColor: 'rgba(15, 10, 25, 0.65)',
+    alignSelf: 'flex-start',
     paddingHorizontal: 12,
-    borderRadius: 999,
+    paddingVertical: 5,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(244, 185, 66, 0.3)',
   },
-  backToDeckText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
+  audioTitle: {
+    color: '#F4B942',
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

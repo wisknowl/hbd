@@ -23,6 +23,7 @@ import {
   Inter_700Bold 
 } from '@expo-google-fonts/inter';
 
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemeProvider, useAppTheme } from './src/context/ThemeContext';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { PackagesScreen } from './src/screens/PackagesScreen';
@@ -104,6 +105,7 @@ const INITIAL_REELS: ReelPost[] = [
 type BottomTab = 'home' | 'gifts' | 'hbdays' | 'inbox' | 'profile';
 
 function MainApp() {
+  const insets = useSafeAreaInsets();
   const { colors, isDark } = useAppTheme();
   const [currentTab, setCurrentTab] = useState<BottomTab>('home');
   const [reels, setReels] = useState<ReelPost[]>(INITIAL_REELS);
@@ -170,11 +172,13 @@ function MainApp() {
       </View>
 
       {/* 5-Tab Bottom Navigation: Home | Gifts | HBDays | Inbox | Profile */}
-      <SafeAreaView style={[
+      <View style={[
         styles.bottomNav, 
         { 
           backgroundColor: colors.bottomNavBg, 
-          borderTopColor: colors.bottomNavBorder 
+          borderTopColor: colors.bottomNavBorder,
+          paddingBottom: Math.max(insets.bottom, 10),
+          height: 56 + Math.max(insets.bottom, 10)
         }
       ]}>
         {/* Tab 1: Home */}
@@ -280,7 +284,7 @@ function MainApp() {
             Profile
           </Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
 
       {/* Celebration Concierge Planner Modal */}
       <PlannerModalScreen
@@ -314,9 +318,11 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <MainApp />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <MainApp />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

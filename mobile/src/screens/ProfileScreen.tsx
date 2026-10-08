@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
+import { ScreenLayout } from '../components/ScreenLayout';
 
 interface ProfileScreenProps {
   onOpenPlanner: () => void;
@@ -107,7 +108,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <ScreenLayout safeTop safeBottom={false}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         
         {/* Profile Header Card */}
@@ -343,7 +344,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </ScreenLayout>
   );
 };
 

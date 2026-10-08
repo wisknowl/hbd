@@ -12,6 +12,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
 import { FloatingCelebrateButton } from '../components/FloatingCelebrateButton';
+import { ScreenLayout } from '../components/ScreenLayout';
 import type { ReminderItem } from '../../../shared/types';
 
 interface DatesScreenProps {
@@ -123,7 +124,7 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({ onPlanCelebration, onO
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <ScreenLayout safeTop safeBottom={false}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Header Hero */}
         <View style={styles.header}>
@@ -275,7 +276,7 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({ onPlanCelebration, onO
 
       {/* Floating Action Button (+) */}
       <FloatingCelebrateButton onPress={() => onPlanCelebration()} />
-    </SafeAreaView>
+    </ScreenLayout>
   );
 };
 

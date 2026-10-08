@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
+import { ScreenLayout } from '../components/ScreenLayout';
 
 interface PackagesScreenProps {
   onSelectPackage: (name: string) => void;
@@ -145,7 +146,7 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <ScreenLayout safeTop safeBottom={false}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Screen Header */}
         <View style={styles.header}>
@@ -298,7 +299,7 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </ScreenLayout>
   );
 };
 

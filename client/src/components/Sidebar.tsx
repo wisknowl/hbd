@@ -15,12 +15,13 @@ import {
   Radio,
   Package,
   Users,
-  User
+  User,
+  MessageSquare
 } from 'lucide-react';
 import { useSession } from '../session';
 import { Avatar } from './Avatar';
 
-export type NavViewType = 'explore' | 'foryou' | 'hbdays' | 'friends' | 'profile' | 'gifts' | 'rooms' | 'vault' | 'packages';
+export type NavViewType = 'explore' | 'foryou' | 'hbdays' | 'inbox' | 'friends' | 'profile' | 'gifts' | 'rooms' | 'vault' | 'packages';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -56,6 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'explore', label: 'World Celebrations', icon: Globe },
     { id: 'foryou', label: 'Moments', icon: Home },
     { id: 'hbdays', label: 'HBDays', icon: Calendar },
+    { id: 'inbox', label: 'Celebration Inbox', icon: MessageSquare },
     { id: 'friends', label: 'Friends & Circle', icon: Users },
     { id: 'profile', label: 'My Profile', icon: User },
     { id: 'gifts', label: 'Universal Gifts', icon: Gift },

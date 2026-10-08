@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
+import { ScreenLayout } from '../components/ScreenLayout';
 
 interface InboxScreenProps {
   onOpenGifts: (recipient: string) => void;
@@ -122,7 +123,7 @@ export const InboxScreen: React.FC<InboxScreenProps> = ({ onOpenGifts, onOpenPla
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <ScreenLayout safeTop safeBottom={false}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         
         {/* Header */}
@@ -264,7 +265,7 @@ export const InboxScreen: React.FC<InboxScreenProps> = ({ onOpenGifts, onOpenPla
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenLayout>
   );
 };
 

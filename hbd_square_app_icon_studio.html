@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBD Square App Icon Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --purple: #5B2A86;
+            --gold: #F4B942;
+            --coral: #FF6B6B;
+            --cream: #FFF8EE;
+            --char: #202124;
+            --bg: #FFF8EE;
+            --fg: #202124;
+            --card: #FFFFFF;
+            --line: #E7DCCB;
+            --muted: #6B6470;
+            --accent: #5B2A86;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--fg);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .poppins-logo {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+        }
+
+        /* Adaptive icon shapes */
+        .mask-squircle {
+            border-radius: 22.5%;
+        }
+        .mask-circle {
+            border-radius: 50%;
+        }
+        .mask-rounded-rect {
+            border-radius: 16%;
+        }
+        .mask-teardrop {
+            border-radius: 50% 50% 50% 12%;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1E7D8;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D8C6AD;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #BFA88B;
+        }
+
+        .toast {
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-[#5B2A86] selection:text-[#FFF8EE]">
+
+    <header class="border-b border-[#E7DCCB] bg-[#FFF8EE]/80 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-[#5B2A86] flex items-center justify-center text-[#FFF8EE] font-extrabold text-xl shadow-md poppins-logo">
+                    H
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-[#202124] leading-none">HBD Icon Studio</h1>
+                    <p class="text-xs text-[#6B6470] mt-0.5">App Icon, Favicon & Asset Suite</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button onclick="copyFullSVG()" class="px-3.5 py-2 text-sm font-medium rounded-lg bg-[#5B2A86] text-[#FFF8EE] hover:bg-[#4a226d] transition-colors flex items-center space-x-2 shadow-sm">
+                    <i class="fa-solid fa-copy text-xs"></i>
+                    <span>Copy Raw SVG</span>
+                </button>
+                <button onclick="downloadSVG()" class="px-3.5 py-2 text-sm font-medium rounded-lg border border-[#5B2A86] text-[#5B2A86] hover:bg-[#5B2A86]/5 transition-colors flex items-center space-x-2">
+                    <i class="fa-solid fa-download text-xs"></i>
+                    <span>Download SVG</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+        
+        <!-- Controls & Global Options -->
+        <div class="bg-white rounded-2xl p-6 border border-[#E7DCCB] shadow-sm mb-8">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-[#6B6470] mb-4">Icon Customizer & Theme Settings</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Background Theme -->
+                <div>
+                    <label class="block text-xs font-medium text-[#202124] mb-2">Icon Background</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="color" id="bgColorPicker" value="#5B2A86" oninput="updateIconColors()" class="w-9 h-9 rounded-lg border border-[#E7DCCB] cursor-pointer p-0.5">
+                        <input type="text" id="bgColorHex" value="#5B2A86" oninput="updateHexColor('bg', this.value)" class="flex-1 text-sm border border-[#E7DCCB] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#5B2A86]">
+                    </div>
+                </div>
+
+                <!-- Text / Foreground Color -->
+                <div>
+                    <label class="block text-xs font-medium text-[#202124] mb-2">Text Color (HBD)</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="color" id="fgColorPicker" value="#FFF8EE" oninput="updateIconColors()" class="w-9 h-9 rounded-lg border border-[#E7DCCB] cursor-pointer p-0.5">
+                        <input type="text" id="fgColorHex" value="#FFF8EE" oninput="updateHexColor('fg', this.value)" class="flex-1 text-sm border border-[#E7DCCB] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#5B2A86]">
+                    </div>
+                </div>
+
+                <!-- Accent Color -->
+                <div>
+                    <label class="block text-xs font-medium text-[#202124] mb-2">Accent Dot Color</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="color" id="accentColorPicker" value="#F4B942" oninput="updateIconColors()" class="w-9 h-9 rounded-lg border border-[#E7DCCB] cursor-pointer p-0.5">
+                        <input type="text" id="accentColorHex" value="#F4B942" oninput="updateHexColor('accent', this.value)" class="flex-1 text-sm border border-[#E7DCCB] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#5B2A86]">
+                    </div>
+                </div>
+
+                <!-- Global Reset -->
+                <div class="flex items-end">
+                    <button onclick="resetDefaultColors()" class="w-full py-2 px-4 rounded-lg bg-[#FFF8EE] border border-[#E7DCCB] text-[#5B2A86] hover:bg-[#E7DCCB]/40 transition-colors text-sm font-medium flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset Default Palette</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Tabs / Section Selector -->
+        <div class="flex overflow-x-auto space-x-2 border-b border-[#E7DCCB] mb-8 pb-1 scrollbar-none">
+            <button onclick="switchTab('tab-app-icon')" id="btn-tab-app-icon" class="tab-btn active px-4 py-2.5 font-medium text-sm rounded-t-xl transition-all border-b-2 border-[#5B2A86] text-[#5B2A86] bg-white">
+                <i class="fa-solid fa-mobile-screen mr-2"></i>App Icon & iOS
+            </button>
+            <button onclick="switchTab('tab-android')" id="btn-tab-android" class="tab-btn px-4 py-2.5 font-medium text-sm rounded-t-xl transition-all border-b-2 border-transparent text-[#6B6470] hover:text-[#202124]">
+                <i class="fa-brands fa-android mr-2"></i>Android Adaptive Icon
+            </button>
+            <button onclick="switchTab('tab-favicon')" id="btn-tab-favicon" class="tab-btn px-4 py-2.5 font-medium text-sm rounded-t-xl transition-all border-b-2 border-transparent text-[#6B6470] hover:text-[#202124]">
+                <i class="fa-solid fa-globe mr-2"></i>Favicon & Browser
+            </button>
+            <button onclick="switchTab('tab-splash')" id="btn-tab-splash" class="tab-btn px-4 py-2.5 font-medium text-sm rounded-t-xl transition-all border-b-2 border-transparent text-[#6B6470] hover:text-[#202124]">
+                <i class="fa-solid fa-[#5B2A86] fa-shield-halved mr-2"></i>Splash Screen
+            </button>
+            <button onclick="switchTab('tab-code')" id="btn-tab-code" class="tab-btn px-4 py-2.5 font-medium text-sm rounded-t-xl transition-all border-b-2 border-transparent text-[#6B6470] hover:text-[#202124]">
+                <i class="fa-solid fa-code mr-2"></i>Code Snippets
+            </button>
+        </div>
+
+        <div id="tab-app-icon" class="tab-content block space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Main Preview Card -->
+                <div class="lg:col-span-2 bg-white rounded-2xl p-8 border border-[#E7DCCB] shadow-sm flex flex-col items-center justify-center min-h-[380px]">
+                    <div class="text-center mb-6">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-[#6B6470]">1:1 Master Square Icon</span>
+                        <p class="text-sm text-[#6B6470] mt-1">Standard 512x512 Master Vector graphic</p>
+                    </div>
+
+                    <!-- Master SVG Container -->
+                    <div id="master-icon-container" class="w-48 h-48 sm:w-64 sm:h-64 shadow-2xl transition-all duration-300 mask-squircle overflow-hidden">
+                        <!-- SVG injected via JavaScript -->
+                    </div>
+
+                    <div class="mt-8 flex flex-wrap gap-3 justify-center">
+                        <button onclick="downloadPNG(512, 'hbd-app-icon-512')" class="px-4 py-2 text-sm font-medium rounded-lg bg-[#5B2A86] text-[#FFF8EE] hover:bg-[#4a226d] transition-colors shadow-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-file-image"></i>
+                            <span>Export 512x512 PNG</span>
+                        </button>
+                        <button onclick="downloadPNG(180, 'apple-touch-icon')" class="px-4 py-2 text-sm font-medium rounded-lg border border-[#E7DCCB] text-[#202124] hover:bg-[#FFF8EE] transition-colors flex items-center space-x-2">
+                            <i class="fa-brands fa-apple"></i>
+                            <span>Export 180x180 (iOS)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- iOS Home Screen Mockup Preview -->
+                <div class="bg-[#202124] text-white rounded-2xl p-6 border border-[#202124] shadow-md flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-[#E7DCCB]">iOS Home Screen Preview</span>
+                            <i class="fa-solid fa-wifi text-xs text-gray-400"></i>
+                        </div>
+
+                        <!-- Grid of dummy apps + HBD App -->
+                        <div class="grid grid-cols-4 gap-4 mt-6">
+                            <!-- Dummy App 1 -->
+                            <div class="flex flex-col items-center space-y-1">
+                                <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white text-xl">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </div>
+                                <span class="text-[10px] text-gray-300">Mail</span>
+                            </div>
+                            <!-- HBD Target App -->
+                            <div class="flex flex-col items-center space-y-1">
+                                <div class="w-12 h-12 shadow-lg transition-transform hover:scale-105 mask-squircle overflow-hidden preview-svg-target">
+                                    <!-- Injected SVG -->
+                                </div>
+                                <span class="text-[10px] text-white font-medium">HBD App</span>
+                            </div>
+                            <!-- Dummy App 2 -->
+                            <div class="flex flex-col items-center space-y-1">
+                                <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center text-white text-xl">
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <span class="text-[10px] text-gray-300">Phone</span>
+                            </div>
+                            <!-- Dummy App 3 -->
+                            <div class="flex flex-col items-center space-y-1">
+                                <div class="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center text-white text-xl">
+                                    <i class="fa-solid fa-music"></i>
+                                </div>
+                                <span class="text-[10px] text-gray-300">Music</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-4 border-t border-gray-800 text-xs text-gray-400">
+                        Displays automatic iOS squircle clipping ($r=22.5\%$).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-android" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 border border-[#E7DCCB] shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="text-base font-bold text-[#202124]">Android Adaptive Icon Mask Tester</h3>
+                        <p class="text-sm text-[#6B6470]">Android scales and masks icons into various OEM device shapes.</p>
+                    </div>
+
+                    <!-- Shape selector controls -->
+                    <div class="flex items-center space-x-2 bg-[#FFF8EE] p-1.5 rounded-xl border border-[#E7DCCB]">
+                        <button onclick="setAdaptiveMask('mask-squircle', this)" class="mask-btn active px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#5B2A86] text-white shadow-sm">Squircle</button>
+                        <button onclick="setAdaptiveMask('mask-circle', this)" class="mask-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-[#6B6470] hover:text-[#202124]">Circle</button>
+                        <button onclick="setAdaptiveMask('mask-rounded-rect', this)" class="mask-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-[#6B6470] hover:text-[#202124]">Rounded Rect</button>
+                        <button onclick="setAdaptiveMask('mask-teardrop', this)" class="mask-btn px-3 py-1.5 text-xs font-semibold rounded-lg text-[#6B6470] hover:text-[#202124]">Teardrop</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center justify-items-center py-6">
+                    <!-- Scaled Preview with Safe Zone Overlay option -->
+                    <div class="flex flex-col items-center">
+                        <div class="relative w-56 h-56 flex items-center justify-center">
+                            <!-- Safe Zone Guide Ring -->
+                            <div id="safeZoneOverlay" class="absolute inset-0 border-2 border-dashed border-[#FF6B6B] rounded-full z-10 pointer-events-none opacity-60 flex items-center justify-center">
+                                <span class="bg-[#FF6B6B] text-white text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider absolute -top-3">Safe Zone (66%)</span>
+                            </div>
+                            <!-- Target Adaptive Icon -->
+                            <div id="android-adaptive-target" class="w-48 h-48 transition-all duration-300 mask-squircle overflow-hidden shadow-xl">
+                                <!-- Injected SVG -->
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center space-x-2">
+                            <input type="checkbox" id="toggleSafeZone" checked onchange="toggleSafeZoneGuide(this.checked)" class="rounded text-[#5B2A86] focus:ring-[#5B2A86]">
+                            <label for="toggleSafeZone" class="text-xs text-[#6B6470] font-medium cursor-pointer">Show 66% Safe Zone Guide</label>
+                        </div>
+                    </div>
+
+                    <!-- Explanatory note -->
+                    <div class="space-y-4 max-w-md">
+                        <div class="p-4 rounded-xl bg-[#FFF8EE] border border-[#E7DCCB]">
+                            <h4 class="text-xs font-bold text-[#5B2A86] uppercase tracking-wider mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Adaptive Specs</h4>
+                            <p class="text-xs text-[#6B6470] leading-relaxed">
+                                Android Adaptive icons consist of two layers: a background and a foreground layer. All logo elements stay within the inner 66% radius circle to avoid clipping by manufacturers.
+                            </p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button onclick="downloadPNG(512, 'android-adaptive-foreground')" class="flex-1 py-2 text-xs font-medium rounded-lg bg-[#5B2A86] text-white hover:bg-[#4a226d] transition-colors">
+                                Download Layer PNG
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-favicon" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Browser Tab Simulation -->
+                <div class="bg-white rounded-2xl p-6 border border-[#E7DCCB] shadow-sm">
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-[#6B6470] mb-4">Browser Tab Mockup</h3>
+                    
+                    <!-- Simulated Chrome Window Bar -->
+                    <div class="bg-[#E7DCCB]/40 rounded-t-xl p-3 border border-[#E7DCCB] flex items-center space-x-2">
+                        <div class="flex space-x-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                        </div>
+                        <!-- Active Tab -->
+                        <div class="bg-white rounded-t-lg px-3 py-1.5 flex items-center space-x-2 border-t border-x border-[#E7DCCB] shadow-xs text-xs max-w-[200px] truncate">
+                            <div class="w-4 h-4 rounded-xs overflow-hidden shrink-0 preview-svg-target">
+                                <!-- Injected SVG -->
+                            </div>
+                            <span class="font-medium text-[#202124] truncate">HBD Studio Web App</span>
+                        </div>
+                    </div>
+                    <!-- Empty Browser View -->
+                    <div class="bg-white border-x border-b border-[#E7DCCB] rounded-b-xl p-8 text-center text-xs text-[#6B6470]">
+                        Browser Viewport Preview
+                    </div>
+
+                    <div class="mt-6 flex flex-wrap gap-2">
+                        <button onclick="downloadPNG(32, 'favicon-32x32')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-[#5B2A86] text-white hover:bg-[#4a226d]">Download 32x32 PNG</button>
+                        <button onclick="downloadPNG(16, 'favicon-16x16')" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E7DCCB] text-[#202124] hover:bg-[#FFF8EE]">Download 16x16 PNG</button>
+                    </div>
+                </div>
+
+                <!-- Favicon Grid Sizes -->
+                <div class="bg-white rounded-2xl p-6 border border-[#E7DCCB] shadow-sm">
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-[#6B6470] mb-4">Standard Icon Sizes</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-[#FFF8EE] border border-[#E7DCCB]">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-xl overflow-hidden preview-svg-target shadow-xs"></div>
+                                <div>
+                                    <div class="text-sm font-bold text-[#202124]">48x48 px</div>
+                                    <div class="text-xs text-[#6B6470]">Desktop Favicon standard</div>
+                                </div>
+                            </div>
+                            <button onclick="downloadPNG(48, 'favicon-48')" class="text-xs text-[#5B2A86] font-semibold hover:underline">PNG</button>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-[#FFF8EE] border border-[#E7DCCB]">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg overflow-hidden preview-svg-target shadow-xs"></div>
+                                <div>
+                                    <div class="text-sm font-bold text-[#202124]">32x32 px</div>
+                                    <div class="text-xs text-[#6B6470]">Browser tab standard</div>
+                                </div>
+                            </div>
+                            <button onclick="downloadPNG(32, 'favicon-32')" class="text-xs text-[#5B2A86] font-semibold hover:underline">PNG</button>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-[#FFF8EE] border border-[#E7DCCB]">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-4 h-4 rounded-xs overflow-hidden preview-svg-target shadow-xs"></div>
+                                <div>
+                                    <div class="text-sm font-bold text-[#202124]">16x16 px</div>
+                                    <div class="text-xs text-[#6B6470]">Bookmarks / Taskbar</div>
+                                </div>
+                            </div>
+                            <button onclick="downloadPNG(16, 'favicon-16')" class="text-xs text-[#5B2A86] font-semibold hover:underline">PNG</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-splash" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 border border-[#E7DCCB] shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-base font-bold text-[#202124]">Mobile Splash Screen Simulator</h3>
+                        <p class="text-sm text-[#6B6470]">Displays centered square brand icon on launch background.</p>
+                    </div>
+                    <button onclick="triggerSplashAnim()" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#5B2A86] text-white hover:bg-[#4a226d]">
+                        <i class="fa-solid fa-play mr-1"></i> Replay Launch
+                    </button>
+                </div>
+
+                <!-- Screen container -->
+                <div class="flex justify-center">
+                    <div class="w-64 h-[480px] rounded-[36px] border-4 border-[#202124] shadow-2xl overflow-hidden relative flex flex-col items-center justify-center p-6 transition-all duration-500" id="splashContainer" style="background-color: var(--purple);">
+                        
+                        <!-- Splash Brand Logo -->
+                        <div id="splashLogo" class="w-24 h-24 mask-squircle overflow-hidden shadow-2xl transition-all duration-700 transform scale-100 opacity-100 preview-svg-target">
+                            <!-- SVG -->
+                        </div>
+
+                        <div id="splashText" class="mt-4 text-center text-[#FFF8EE] font-bold text-lg tracking-wider opacity-100 transition-opacity duration-700 poppins-logo">
+                            HBD APP
+                        </div>
+
+                        <!-- Bottom Spinner -->
+                        <div class="absolute bottom-10 flex space-x-1.5">
+                            <div class="w-2 h-2 rounded-full bg-[#F4B942] animate-bounce"></div>
+                            <div class="w-2 h-2 rounded-full bg-[#F4B942] animate-bounce [animation-delay:0.2s]"></div>
+                            <div class="w-2 h-2 rounded-full bg-[#F4B942] animate-bounce [animation-delay:0.4s]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-code" class="tab-content hidden space-y-6">
+            <!-- Inline SVG Code Box -->
+            <div class="bg-white rounded-2xl p-6 border border-[#E7DCCB] shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-[#6B6470]">1. Standalone SVG Code</h3>
+                    <button onclick="copyCode('code-svg')" class="text-xs font-semibold text-[#5B2A86] hover:underline flex items-center space-x-1">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>Copy Code</span>
+                    </button>
+                </div>
+                <pre class="bg-[#202124] text-[#FFF8EE] p-4 rounded-xl text-xs overflow-x-auto font-mono" id="code-svg"></pre>
+            </div>
+
+            <!-- HTML Head Tags Box -->
+            <div class="bg-white rounded-2xl p-6 border border-[#E7DCCB] shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-[#6B6470]">2. Recommended HTML Favicon Tag Headers</h3>
+                    <button onclick="copyCode('code-html')" class="text-xs font-semibold text-[#5B2A86] hover:underline flex items-center space-x-1">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>Copy Code</span>
+                    </button>
+                </div>
+                <pre class="bg-[#202124] text-[#FFF8EE] p-4 rounded-xl text-xs overflow-x-auto font-mono" id="code-html">
+&lt;!-- Favicon &amp; App Icon Headers --&gt;
+&lt;link rel="icon" type="image/svg+xml" href="/favicon.svg"&gt;
+&lt;link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"&gt;
+&lt;meta name="theme-color" content="#5B2A86"&gt;
+&lt;link rel="manifest" href="/site.webmanifest"&gt;</pre>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="toast" class="toast fixed bottom-5 right-5 bg-[#202124] text-[#FFF8EE] px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-sm transform translate-y-20 opacity-0 pointer-events-none z-50">
+        <i class="fa-solid fa-circle-check text-[#F4B942]"></i>
+        <span id="toast-message">Action successful!</span>
+    </div>
+
+    <footer class="border-t border-[#E7DCCB] bg-white py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-[#6B6470]">
+            HBD Square App Icon Studio &bull; Built with standard SVG vector geometry and fluid UI layout.
+        </div>
+    </footer>
+
+    <script>
+        // State variables
+        let colors = {
+            bg: '#5B2A86',
+            fg: '#FFF8EE',
+            accent: '#F4B942'
+        };
+
+        // Master SVG Builder Function
+        function generateSVG(bg = colors.bg, fg = colors.fg, accent = colors.accent) {
+            return `<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+  <!-- Icon Background Mask -->
+  <rect width="512" height="512" fill="${bg}" />
+  
+  <!-- Centered Logo Layer -->
+  <g transform="translate(48, 128)">
+    <!-- Brand Typography HBD -->
+    <text 
+      x="0" 
+      y="210" 
+      font-family="Poppins, system-ui, -apple-system, sans-serif" 
+      font-weight="800" 
+      font-size="190" 
+      letter-spacing="-6" 
+      fill="${fg}">HBD</text>
+    
+    <!-- Outer Accent Ring -->
+    <circle 
+      cx="390" 
+      cy="50" 
+      r="40" 
+      fill="none" 
+      stroke="${accent}" 
+      stroke-opacity="0.35" 
+      stroke-width="10" />
+    
+    <!-- Inner Accent Circle -->
+    <circle 
+      cx="390" 
+      cy="50" 
+      r="24" 
+      fill="${accent}" />
+  </g>
+</svg>`;
+        }
+
+        // Render SVGs to all preview elements
+        function renderAllIcons() {
+            const svgContent = generateSVG();
+            
+            // 1. Master Icon Container
+            const masterContainer = document.getElementById('master-icon-container');
+            if (masterContainer) masterContainer.innerHTML = svgContent;
+
+            // 2. Android Adaptive Icon Target
+            const androidTarget = document.getElementById('android-adaptive-target');
+            if (androidTarget) androidTarget.innerHTML = svgContent;
+
+            // 3. Generic Preview SVG Targets across tabs
+            const previewTargets = document.querySelectorAll('.preview-svg-target');
+            previewTargets.forEach(el => {
+                el.innerHTML = svgContent;
+            });
+
+            // 4. Update Code Snippet Output
+            const codeBox = document.getElementById('code-svg');
+            if (codeBox) codeBox.textContent = svgContent;
+
+            // 5. Update Splash Screen BG Color
+            const splash = document.getElementById('splashContainer');
+            if (splash) splash.style.backgroundColor = colors.bg;
+        }
+
+        // Color Control Event Handlers
+        function updateIconColors() {
+            colors.bg = document.getElementById('bgColorPicker').value;
+            colors.fg = document.getElementById('fgColorPicker').value;
+            colors.accent = document.getElementById('accentColorPicker').value;
+
+            document.getElementById('bgColorHex').value = colors.bg.toUpperCase();
+            document.getElementById('fgColorHex').value = colors.fg.toUpperCase();
+            document.getElementById('accentColorHex').value = colors.accent.toUpperCase();
+
+            renderAllIcons();
+        }
+
+        function updateHexColor(type, val) {
+            if (/^#[0-9A-F]{6}$/i.test(val)) {
+                if (type === 'bg') {
+                    colors.bg = val;
+                    document.getElementById('bgColorPicker').value = val;
+                } else if (type === 'fg') {
+                    colors.fg = val;
+                    document.getElementById('fgColorPicker').value = val;
+                } else if (type === 'accent') {
+                    colors.accent = val;
+                    document.getElementById('accentColorPicker').value = val;
+                }
+                renderAllIcons();
+            }
+        }
+
+        function resetDefaultColors() {
+            colors = { bg: '#5B2A86', fg: '#FFF8EE', accent: '#F4B942' };
+            document.getElementById('bgColorPicker').value = colors.bg;
+            document.getElementById('bgColorHex').value = colors.bg;
+            document.getElementById('fgColorPicker').value = colors.fg;
+            document.getElementById('fgColorHex').value = colors.fg;
+            document.getElementById('accentColorPicker').value = colors.accent;
+            document.getElementById('accentColorHex').value = colors.accent;
+            renderAllIcons();
+            showToast('Colors reset to default');
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-[#5B2A86]', 'text-[#5B2A86]', 'bg-white');
+                btn.classList.add('border-transparent', 'text-[#6B6470]');
+            });
+
+            const activeContent = document.getElementById(tabId);
+            if (activeContent) activeContent.classList.remove('hidden');
+
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'border-[#5B2A86]', 'text-[#5B2A86]', 'bg-white');
+                activeBtn.classList.remove('border-transparent', 'text-[#6B6470]');
+            }
+        }
+
+        // Android Adaptive Masking Logic
+        function setAdaptiveMask(maskClass, btnElement) {
+            const target = document.getElementById('android-adaptive-target');
+            if (!target) return;
+
+            target.className = `w-48 h-48 transition-all duration-300 overflow-hidden shadow-xl ${maskClass}`;
+
+            document.querySelectorAll('.mask-btn').forEach(b => {
+                b.classList.remove('bg-[#5B2A86]', 'text-white', 'shadow-sm');
+                b.classList.add('text-[#6B6470]');
+            });
+            btnElement.classList.add('bg-[#5B2A86]', 'text-white', 'shadow-sm');
+            btnElement.classList.remove('text-[#6B6470]');
+        }
+
+        function toggleSafeZoneGuide(show) {
+            const overlay = document.getElementById('safeZoneOverlay');
+            if (overlay) {
+                overlay.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        // Splash screen animation trigger
+        function triggerSplashAnim() {
+            const logo = document.getElementById('splashLogo');
+            const text = document.getElementById('splashText');
+
+            logo.style.transform = 'scale(0.5)';
+            logo.style.opacity = '0';
+            text.style.opacity = '0';
+
+            setTimeout(() => {
+                logo.style.transform = 'scale(1)';
+                logo.style.opacity = '1';
+                text.style.opacity = '1';
+            }, 100);
+        }
+
+        // Copy and Download Helper Logic
+        function copyFullSVG() {
+            const svgText = generateSVG();
+            copyToClipboard(svgText, 'SVG code copied to clipboard!');
+        }
+
+        function copyCode(elementId) {
+            const code = document.getElementById(elementId).textContent;
+            copyToClipboard(code, 'Code snippet copied to clipboard!');
+        }
+
+        function copyToClipboard(text, message) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast(message);
+        }
+
+        function downloadSVG() {
+            const svgData = generateSVG();
+            const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'hbd-app-icon.svg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Downloaded SVG successfully!');
+        }
+
+        // PNG Converter using Canvas
+        function downloadPNG(size, filename) {
+            const svgString = generateSVG();
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            const img = new Image();
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+
+            img.onload = function () {
+                ctx.drawImage(img, 0, 0, size, size);
+                URL.revokeObjectURL(url);
+
+                const pngUrl = canvas.toDataURL('image/png');
+                const downloadLink = document.createElement('a');
+                downloadLink.href = pngUrl;
+                downloadLink.download = `${filename}.png`;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                showToast(`Downloaded ${size}x${size} PNG!`);
+            };
+
+            img.src = url;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            msgEl.textContent = msg;
+
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 2500);
+        }
+
+        // Initial render on load
+        window.onload = function() {
+            renderAllIcons();
+        };
+    </script>
+</body>
+</html>

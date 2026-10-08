@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useSession } from '../session';
 import { 
-  User, 
   Calendar, 
   MapPin, 
   Heart, 
@@ -14,9 +13,7 @@ import {
   Plus, 
   X, 
   Camera,
-  Users,
-  Archive,
-  Award
+  Users
 } from 'lucide-react';
 import { Avatar } from './Avatar';
 import { formatBirthday, daysUntilBirthday, countdownLabel } from '../lib/social';
@@ -26,10 +23,6 @@ interface ProfileViewProps {
   onOpenPlanner: () => void;
   onNavigateToFriends: () => void;
 }
-
-const PRESET_INTERESTS = [
-  'Books', 'Perfume', 'Jewelry', 'Tech', 'Gaming', 'Coffee', 'Skincare', 'Music', 'Plants', 'Fashion', 'Art', 'Travel'
-];
 
 export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenPlanner, onNavigateToFriends }) => {
   const { profile, updateProfile, logOut, friendships } = useSession();
@@ -226,14 +219,21 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenPlanner, onNavig
               </div>
             </div>
 
-            {/* Actions: Edit & Logout */}
+            {/* Actions: Plan, Edit & Logout */}
             <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={onOpenPlanner}
+                className="hbd-btn hbd-btn-primary"
+                style={{ padding: '9px 18px', fontSize: '13px' }}
+              >
+                <Sparkles size={15} /> Plan Celebration
+              </button>
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className={`hbd-btn ${isEditing ? 'hbd-btn-primary' : 'hbd-btn-ghost'}`}
                 style={{ padding: '9px 18px', fontSize: '13px' }}
               >
-                <Edit3 size={15} /> {isEditing ? 'Done Editing' : 'Edit Profile'}
+                <Edit3 size={15} /> {isEditing ? 'Done' : 'Edit Profile'}
               </button>
               <button
                 onClick={logOut}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSession } from '../session';
-import { Sparkles, Calendar, Heart, Gift, ArrowRight, User, Plus, X, ShieldCheck, LogIn, KeyRound } from 'lucide-react';
+import { Sparkles, Calendar, Heart, Gift, ArrowRight, User, Plus, X, ShieldCheck, KeyRound } from 'lucide-react';
 import { mockPeople } from '../data/people';
 import { Avatar } from './Avatar';
 

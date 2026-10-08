@@ -11,6 +11,7 @@ import { CelebrationRoomsView } from './components/CelebrationRoomsView';
 import { OnboardingView } from './components/OnboardingView';
 import { FriendsView } from './components/FriendsView';
 import { ProfileView } from './components/ProfileView';
+import { InboxView } from './components/InboxView';
 import { useSession } from './session';
 import { mockReels, mockPackages } from './mockData';
 import type { ReelPost, CelebrationCategory, PersonCircleMember } from '../../shared/types';
@@ -132,6 +133,13 @@ export const App: React.FC = () => {
           <HBDaysView
             onPlanCelebration={(cat, name) => handleOpenPlanner(cat, name)}
             onOpenGiftsForPerson={handleOpenGiftsForPerson}
+          />
+        )}
+
+        {activeView === 'inbox' && (
+          <InboxView 
+            onOpenPlanner={(name) => handleOpenPlanner('BIRTHDAY', name)}
+            onNavigateToVault={() => setActiveView('vault')}
           />
         )}
 
