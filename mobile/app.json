@@ -24,6 +24,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a50991cf-e6de-4682-866f-02c905cb96e9"
+      }
+    },
+    "owner": "wisknowl"
   }
 }

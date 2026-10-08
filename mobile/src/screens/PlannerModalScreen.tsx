@@ -7,10 +7,11 @@ import {
   TouchableOpacity, 
   TextInput, 
   Modal, 
-  SafeAreaView,
-  Linking,
-  Alert
+  SafeAreaView, 
+  Linking, 
+  Alert 
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { HBD_THEME } from '../theme';
 import type { CelebrationCategory, PackageTier } from '../../../shared/types';
 
@@ -30,19 +31,19 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
   const [category, setCategory] = useState<CelebrationCategory>(initialCategory);
   const [celebrant, setCelebrant] = useState(initialCelebrant);
   const [city, setCity] = useState('Douala');
-  const [date, setDate] = useState('14 Nov 2026');
+  const [date, setDate] = useState('19 Oct 2026');
   const [tier, setTier] = useState<PackageTier>('CLASSIC');
-  const [selectedAddons, setSelectedAddons] = useState<string[]>(['Cake', 'Flowers']);
+  const [selectedAddons, setSelectedAddons] = useState<string[]>(['Custom Cake', 'Fresh Flowers']);
 
   const categories: { key: CelebrationCategory; label: string; icon: string }[] = [
-    { key: 'BIRTHDAY', label: 'Person', icon: '🎂' },
-    { key: 'BEGINNING', label: 'Company', icon: '🚀' },
+    { key: 'BIRTHDAY', label: 'Person / Birthday', icon: '🎂' },
+    { key: 'BEGINNING', label: 'Company / Startup', icon: '🚀' },
     { key: 'MILESTONE', label: 'Milestone', icon: '🏆' },
-    { key: 'ANNIVERSARY', label: 'Anniversary', icon: '📅' },
-    { key: 'COMMUNITY', label: 'Community', icon: '❤️' }
+    { key: 'ANNIVERSARY', label: 'Anniversary', icon: '💍' },
+    { key: 'COMMUNITY', label: 'Cause / Hero', icon: '❤️' }
   ];
 
-  const addons = ['Cake', 'Flowers', 'Photos', 'Video', 'Catering', 'Surprise'];
+  const addons = ['Custom Cake', 'Fresh Flowers', 'Pro Photos', 'Video Reel', 'Live Choir', 'Surprise Box'];
 
   const toggleAddon = (item: string) => {
     setSelectedAddons(prev => 
@@ -51,16 +52,16 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
   };
 
   const handleSendToWhatsApp = () => {
-    const text = `Hello HBD Foundation Concierge! I want to plan a celebration:
-- Type: ${category}
+    const text = `Hello HBD Foundation Concierge! I want to coordinate a celebration:
+- Category: ${category}
 - Who/What: ${celebrant || 'My Loved One'}
 - Date & City: ${date} in ${city}
-- Package: ${tier}
+- Package Scale: ${tier}
 - Special Touches: ${selectedAddons.join(', ')}`;
 
     const url = `https://wa.me/237699000000?text=${encodeURIComponent(text)}`;
     Linking.openURL(url).catch(() => {
-      Alert.alert('Celebration Request Sent', 'Our specialist will reach out to you shortly!');
+      Alert.alert('Celebration Dispatched', 'An HBD celebration specialist will coordinate your experience shortly!');
     });
     onClose();
   };
@@ -70,9 +71,9 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
       <SafeAreaView style={styles.modalSafe}>
         <View style={styles.headerBar}>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Text style={styles.closeText}>✕</Text>
+            <Feather name="x" size={18} color={HBD_THEME.colors.charcoal} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>HBD Celebration Planner</Text>
+          <Text style={styles.headerTitle}>HBD Celebration Concierge</Text>
           <View style={{ width: 32 }} />
         </View>
 
@@ -100,7 +101,7 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
           <Text style={styles.fieldLabel}>WHO OR WHAT ARE WE CELEBRATING?</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. Mama Chantal, My Startup, 20 Years Marriage..."
+            placeholder="e.g. Mama Chantal, PaySeed Launch, Amina & Tariq..."
             value={celebrant}
             onChangeText={setCelebrant}
             placeholderTextColor={HBD_THEME.colors.muted}
@@ -118,7 +119,7 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.fieldLabel}>CITY / COUNTRY</Text>
+              <Text style={styles.fieldLabel}>CITY / REGION</Text>
               <TextInput
                 style={styles.input}
                 value={city}
@@ -129,13 +130,13 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
           </View>
 
           {/* Section 4: Scale & Packages */}
-          <Text style={styles.fieldLabel}>CHOOSE PACKAGE SCALE</Text>
+          <Text style={styles.fieldLabel}>SELECT PACKAGE SCALE</Text>
           <View style={styles.packagesCol}>
             {[
-              { id: 'MINI', name: 'HBD Mini', desc: 'Digital card, treats, message, delivery' },
-              { id: 'CLASSIC', name: 'HBD Classic', desc: 'Custom cake, flowers, balloons, photo capture' },
-              { id: 'PREMIUM', name: 'HBD Premium', desc: 'Decor, video reel, live acoustic choir' },
-              { id: 'GLOBAL', name: 'HBD Global', desc: 'Celebrate cross-border across continents' },
+              { id: 'MINI', name: '🎂 HBD Mini (From $45)', desc: 'Digital animation card, treats, local delivery' },
+              { id: 'CLASSIC', name: '🎁 HBD Classic (From $150)', desc: 'Custom cake, flowers, balloons, photo capture' },
+              { id: 'PREMIUM', name: '💎 HBD Premium (From $490)', desc: 'Venue decor, highlight video, acoustic singer choir' },
+              { id: 'GLOBAL', name: '🌍 HBD Global (Cross-Border)', desc: 'Coordinate surprise across continents & currencies' },
             ].map((p) => {
               const isSel = tier === p.id;
               return (
@@ -144,20 +145,22 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
                   style={[styles.pkgCard, isSel && styles.pkgCardSelected]}
                   onPress={() => setTier(p.id as PackageTier)}
                 >
-                  <View>
+                  <View style={{ flex: 1 }}>
                     <Text style={[styles.pkgName, isSel && styles.pkgNameSelected]}>{p.name}</Text>
                     <Text style={styles.pkgDesc}>{p.desc}</Text>
                   </View>
-                  <Text style={[styles.pkgRadio, isSel && styles.pkgRadioSelected]}>
-                    {isSel ? '●' : '○'}
-                  </Text>
+                  <Feather 
+                    name={isSel ? "check-circle" : "circle"} 
+                    size={20} 
+                    color={isSel ? HBD_THEME.colors.purple : HBD_THEME.colors.muted} 
+                  />
                 </TouchableOpacity>
               );
             })}
           </View>
 
           {/* Section 5: Special Touches */}
-          <Text style={styles.fieldLabel}>WHAT DO YOU WANT?</Text>
+          <Text style={styles.fieldLabel}>CURATE SPECIAL TOUCHES</Text>
           <View style={styles.chipsRow}>
             {addons.map((addon) => {
               const isSel = selectedAddons.includes(addon);
@@ -177,7 +180,8 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
 
           {/* Submit Action */}
           <TouchableOpacity style={styles.submitBtn} onPress={handleSendToWhatsApp}>
-            <Text style={styles.submitBtnText}>Create My Celebration ✨</Text>
+            <Feather name="star" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={styles.submitBtnText}>Orchestrate This Celebration</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -188,7 +192,7 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
 const styles = StyleSheet.create({
   modalSafe: {
     flex: 1,
-    backgroundColor: HBD_THEME.colors.cream,
+    backgroundColor: HBD_THEME.colors.background,
   },
   headerBar: {
     flexDirection: 'row',
@@ -198,23 +202,19 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: HBD_THEME.colors.border,
+    backgroundColor: '#FFFFFF',
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#fff',
+    backgroundColor: HBD_THEME.colors.purpleSoft,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  closeText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: HBD_THEME.colors.charcoal,
-  },
   headerTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: HBD_THEME.typography.headingFont,
     color: HBD_THEME.colors.purple,
     letterSpacing: -0.3,
   },
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: HBD_THEME.typography.headingSemiBold,
     letterSpacing: 0.8,
     color: HBD_THEME.colors.muted,
     marginBottom: 8,
@@ -248,20 +248,21 @@ const styles = StyleSheet.create({
   },
   chipText: {
     color: HBD_THEME.colors.purple,
-    fontSize: 12.5,
-    fontWeight: '700',
+    fontSize: 12,
+    fontFamily: HBD_THEME.typography.headingSemiBold,
   },
   chipTextSelected: {
-    color: HBD_THEME.colors.cream,
+    color: '#FFFFFF',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: HBD_THEME.colors.border,
     borderRadius: HBD_THEME.borderRadius.sm,
     paddingHorizontal: 14,
     paddingVertical: 11,
-    fontSize: 13.5,
+    fontSize: 13,
+    fontFamily: HBD_THEME.typography.bodyFont,
     color: HBD_THEME.colors.charcoal,
   },
   twoCol: {
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: HBD_THEME.colors.border,
     borderRadius: HBD_THEME.borderRadius.md,
@@ -286,8 +287,8 @@ const styles = StyleSheet.create({
     backgroundColor: HBD_THEME.colors.purpleSoft,
   },
   pkgName: {
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 13,
+    fontFamily: HBD_THEME.typography.headingBold,
     color: HBD_THEME.colors.charcoal,
   },
   pkgNameSelected: {
@@ -295,16 +296,9 @@ const styles = StyleSheet.create({
   },
   pkgDesc: {
     fontSize: 11,
+    fontFamily: HBD_THEME.typography.bodyFont,
     color: HBD_THEME.colors.muted,
     marginTop: 2,
-  },
-  pkgRadio: {
-    fontSize: 16,
-    color: HBD_THEME.colors.muted,
-  },
-  pkgRadioSelected: {
-    color: HBD_THEME.colors.purple,
-    fontWeight: '900',
   },
   chipGold: {
     borderWidth: 1.5,
@@ -312,7 +306,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: HBD_THEME.borderRadius.pill,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
   },
   chipGoldSelected: {
     borderColor: HBD_THEME.colors.gold,
@@ -321,17 +315,19 @@ const styles = StyleSheet.create({
   chipGoldText: {
     color: HBD_THEME.colors.charcoal,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: HBD_THEME.typography.bodyMedium,
   },
   chipGoldTextSelected: {
     color: HBD_THEME.colors.charcoal,
-    fontWeight: '800',
+    fontFamily: HBD_THEME.typography.headingBold,
   },
   submitBtn: {
     backgroundColor: HBD_THEME.colors.purple,
     borderRadius: HBD_THEME.borderRadius.pill,
     paddingVertical: 14,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 26,
     shadowColor: HBD_THEME.colors.purple,
     shadowOffset: { width: 0, height: 6 },
@@ -340,8 +336,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   submitBtnText: {
-    color: HBD_THEME.colors.cream,
-    fontSize: 15,
-    fontWeight: '800',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: HBD_THEME.typography.headingBold,
   },
 });
