@@ -5,24 +5,27 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  SafeAreaView,
-  TextInput,
-  Image,
-  Switch,
-  Alert
+  SafeAreaView, 
+  TextInput, 
+  Image, 
+  Switch, 
+  Alert 
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { HBD_THEME } from '../theme';
+import { useAppTheme } from '../context/ThemeContext';
 
 interface ProfileScreenProps {
   onOpenPlanner: () => void;
-  onNavigateToFriends: () => void;
+  onNavigateToFriends?: () => void;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ 
   onOpenPlanner,
   onNavigateToFriends
 }) => {
+  const { colors, isDark, toggleTheme } = useAppTheme();
+  const [activeTab, setActiveTab] = useState<'PREFERENCES' | 'MEMORIES'>('PREFERENCES');
+
   const [name, setName] = useState('Samuel Ndamukong');
   const [handle, setHandle] = useState('samuel_nd');
   const [bio, setBio] = useState('Product architect & celebration enthusiast. Always down for good coffee & heartfelt surprises ✨');
@@ -49,6 +52,34 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [showAge, setShowAge] = useState(false);
   const [addressProtected, setAddressProtected] = useState(true);
 
+  // Memory Vault items accumulated from past celebrations
+  const pastMemories = [
+    {
+      id: 'mem-1',
+      title: 'London 29th Rooftop Birthday',
+      date: '24 Oct 2025',
+      cover: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=400&q=80',
+      itemsCount: '18 Photos · 1 Video Reel · 6 Audio Wishes',
+      curator: 'Circle of 12 Friends',
+    },
+    {
+      id: 'mem-2',
+      title: 'PaySeed Startup Launch Day',
+      date: '14 May 2025',
+      cover: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=400&q=80',
+      itemsCount: '1 Highlight Video · 42 Celebration Cards',
+      curator: 'Aisha Bello & Team',
+    },
+    {
+      id: 'mem-3',
+      title: 'Family Douala Milestone Gathering',
+      date: '18 Dec 2024',
+      cover: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80',
+      itemsCount: '24 Keepsake Photos · Acoustic Choir Audio',
+      curator: 'Mama Chantal & Family',
+    }
+  ];
+
   const handleAddWish = () => {
     if (newWish.trim()) {
       setWishlist(prev => [...prev, newWish.trim()]);
@@ -72,173 +103,245 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   };
 
   const handleSaveProfile = () => {
-    Alert.alert('Profile Updated', 'Your celebration preferences and birthday countdown have been saved.');
+    Alert.alert('Profile Saved', 'Your celebration preferences and birthday countdown have been updated.');
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Profile Card Header */}
-        <View style={styles.profileHeaderCard}>
+        
+        {/* Profile Header Card */}
+        <View style={[styles.profileHeaderCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
           <View style={styles.avatarRow}>
             <View style={styles.avatarWrap}>
               <Image 
                 source={{ uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' }} 
-                style={styles.avatar} 
+                style={[styles.avatar, { borderColor: colors.gold }]} 
               />
-              <TouchableOpacity style={styles.cameraBtn}>
+              <TouchableOpacity style={[styles.cameraBtn, { backgroundColor: colors.purple }]}>
                 <Feather name="camera" size={13} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 
             <View style={{ flex: 1 }}>
-              <Text style={styles.fullName}>{name}</Text>
-              <Text style={styles.handleText}>@{handle}</Text>
-              <View style={styles.locationPill}>
-                <Feather name="map-pin" size={11} color={HBD_THEME.colors.purple} />
-                <Text style={styles.locationText}>{city}</Text>
+              <Text style={[styles.fullName, { color: colors.fg }]}>{name}</Text>
+              <Text style={[styles.handleText, { color: colors.muted }]}>@{handle}</Text>
+              <View style={[styles.locationPill, { backgroundColor: colors.purpleSoft }]}>
+                <Feather name="map-pin" size={11} color={colors.purple} />
+                <Text style={[styles.locationText, { color: colors.purple }]}>{city}</Text>
               </View>
             </View>
           </View>
 
-          <Text style={styles.bioText}>{bio}</Text>
+          <Text style={[styles.bioText, { color: colors.fg }]}>{bio}</Text>
 
           {/* Birthday Countdown Banner */}
-          <View style={styles.countdownBanner}>
+          <View style={[styles.countdownBanner, { backgroundColor: colors.purple }]}>
             <View style={styles.countdownIconWrap}>
               <Text style={{ fontSize: 24 }}>🎂</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.countdownTag}>YOUR CELEBRATION IS COMING</Text>
+              <Text style={[styles.countdownTag, { color: colors.gold }]}>YOUR CELEBRATION IS COMING</Text>
               <Text style={styles.countdownTitle}>{birthday} (In {daysUntil} days!)</Text>
-              <Text style={styles.countdownSub}>Your friends can see what you love to surprise you.</Text>
+              <Text style={styles.countdownSub}>Friends in your circle can view your wishlist to surprise you.</Text>
             </View>
           </View>
         </View>
 
-        {/* Wishlist / Things I Love */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIconWrap}>
-              <Feather name="heart" size={14} color={HBD_THEME.colors.coral} />
-            </View>
-            <View>
-              <Text style={styles.sectionTitle}>Things I Love (Wishlist)</Text>
-              <Text style={styles.sectionSubtitle}>Guides your friends when choosing gifts for you.</Text>
-            </View>
-          </View>
+        {/* Tab Switcher: Preferences vs My Memories Vault */}
+        <View style={[styles.tabBar, { backgroundColor: colors.card, borderColor: colors.line }]}>
+          <TouchableOpacity 
+            style={[styles.tabBtn, activeTab === 'PREFERENCES' && { backgroundColor: colors.purple }]}
+            onPress={() => setActiveTab('PREFERENCES')}
+          >
+            <Feather 
+              name="heart" 
+              size={13} 
+              color={activeTab === 'PREFERENCES' ? '#FFFFFF' : colors.muted} 
+            />
+            <Text style={[styles.tabBtnText, activeTab === 'PREFERENCES' ? styles.tabBtnTextActive : { color: colors.muted }]}>
+              Wishlist & Privacy
+            </Text>
+          </TouchableOpacity>
 
-          <View style={styles.tagWrap}>
-            {wishlist.map((item, i) => (
-              <View key={i} style={styles.wishChip}>
-                <Text style={styles.wishChipText}>{item}</Text>
-                <TouchableOpacity onPress={() => handleRemoveWish(item)}>
-                  <Feather name="x" size={12} color={HBD_THEME.colors.purple} />
+          <TouchableOpacity 
+            style={[styles.tabBtn, activeTab === 'MEMORIES' && { backgroundColor: colors.purple }]}
+            onPress={() => setActiveTab('MEMORIES')}
+          >
+            <Feather 
+              name="archive" 
+              size={13} 
+              color={activeTab === 'MEMORIES' ? '#FFFFFF' : colors.muted} 
+            />
+            <Text style={[styles.tabBtnText, activeTab === 'MEMORIES' ? styles.tabBtnTextActive : { color: colors.muted }]}>
+              My Memories ({pastMemories.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {activeTab === 'PREFERENCES' ? (
+          <>
+            {/* Wishlist / Things I Love */}
+            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
+              <View style={styles.sectionHeader}>
+                <View style={[styles.sectionIconWrap, { backgroundColor: colors.purpleSoft }]}>
+                  <Feather name="heart" size={14} color={colors.coral} />
+                </View>
+                <View>
+                  <Text style={[styles.sectionTitle, { color: colors.fg }]}>Things I Love (Wishlist)</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.muted }]}>Guides your friends when choosing gifts for you.</Text>
+                </View>
+              </View>
+
+              <View style={styles.tagWrap}>
+                {wishlist.map((item, i) => (
+                  <View key={i} style={[styles.wishChip, { backgroundColor: colors.purpleSoft }]}>
+                    <Text style={[styles.wishChipText, { color: colors.purple }]}>{item}</Text>
+                    <TouchableOpacity onPress={() => handleRemoveWish(item)}>
+                      <Feather name="x" size={12} color={colors.purple} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.addTagRow}>
+                <TextInput 
+                  placeholder="Add item (e.g. Perfume, Airpods)..."
+                  placeholderTextColor={colors.muted}
+                  value={newWish}
+                  onChangeText={setNewWish}
+                  style={[styles.tagInput, { borderColor: colors.line, color: colors.fg }]}
+                  onSubmitEditing={handleAddWish}
+                />
+                <TouchableOpacity style={[styles.addTagBtn, { backgroundColor: colors.purple }]} onPress={handleAddWish}>
+                  <Feather name="plus" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Things to Avoid / Allergies */}
+            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
+              <View style={styles.sectionHeader}>
+                <View style={[styles.sectionIconWrap, { backgroundColor: colors.coralSoft }]}>
+                  <Feather name="shield" size={14} color={colors.coral} />
+                </View>
+                <View>
+                  <Text style={[styles.sectionTitle, { color: colors.fg }]}>Things to Avoid / Allergies</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.muted }]}>Prevents awkward or allergic gifts.</Text>
+                </View>
+              </View>
+
+              <View style={styles.tagWrap}>
+                {avoidList.map((item, i) => (
+                  <View key={i} style={[styles.avoidChip, { backgroundColor: colors.coralSoft }]}>
+                    <Text style={[styles.avoidChipText, { color: colors.coral }]}>{item}</Text>
+                    <TouchableOpacity onPress={() => handleRemoveAvoid(item)}>
+                      <Feather name="x" size={12} color={colors.coral} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.addTagRow}>
+                <TextInput 
+                  placeholder="Add allergy/dislike (e.g. Lilies, Alcohol)..."
+                  placeholderTextColor={colors.muted}
+                  value={newAvoid}
+                  onChangeText={setNewAvoid}
+                  style={[styles.tagInput, { borderColor: colors.line, color: colors.fg }]}
+                  onSubmitEditing={handleAddAvoid}
+                />
+                <TouchableOpacity style={[styles.addTagBtn, { backgroundColor: colors.coral }]} onPress={handleAddAvoid}>
+                  <Feather name="plus" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Privacy & Appearance Settings */}
+            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
+              <Text style={[styles.sectionTitle, { color: colors.fg }]}>Appearance & Privacy</Text>
+              <Text style={[styles.sectionSubtitle, { color: colors.muted }]}>Customize app theme and delivery encryption.</Text>
+
+              {/* Theme Toggle Row */}
+              <View style={[styles.toggleRow, { borderBottomColor: colors.line }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: colors.fg }]}>Dark Mode</Text>
+                  <Text style={[styles.toggleDesc, { color: colors.muted }]}>Harmonized with client dark theme.</Text>
+                </View>
+                <Switch 
+                  value={isDark} 
+                  onValueChange={toggleTheme} 
+                  trackColor={{ false: '#ccc', true: colors.purple }}
+                />
+              </View>
+
+              <View style={[styles.toggleRow, { borderBottomColor: colors.line }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: colors.fg }]}>Birthday Visible to Friends Only</Text>
+                  <Text style={[styles.toggleDesc, { color: colors.muted }]}>Keep celebration date within your verified circle.</Text>
+                </View>
+                <Switch 
+                  value={isFriendsOnly} 
+                  onValueChange={setIsFriendsOnly} 
+                  trackColor={{ false: '#ccc', true: colors.purple }}
+                />
+              </View>
+
+              <View style={[styles.toggleRow, { borderBottomWidth: 0 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: colors.fg }]}>Encrypted Address for Surprise Gifts</Text>
+                  <Text style={[styles.toggleDesc, { color: colors.muted }]}>Friends can send gifts without seeing your private street address.</Text>
+                </View>
+                <Switch 
+                  value={addressProtected} 
+                  onValueChange={setAddressProtected} 
+                  trackColor={{ false: '#ccc', true: colors.purple }}
+                />
+              </View>
+            </View>
+
+            {/* Save Button */}
+            <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.purple }]} onPress={handleSaveProfile}>
+              <Feather name="check-circle" size={16} color="#FFFFFF" />
+              <Text style={styles.saveBtnText}>Save Preferences</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          /* My Memories Archive */
+          <View style={styles.memoriesCol}>
+            <Text style={[styles.memoryVaultHeading, { color: colors.purple }]}>
+              Celebration Vault
+            </Text>
+            <Text style={[styles.memoryVaultSub, { color: colors.muted }]}>
+              Memories automatically created and archived from your past celebrations.
+            </Text>
+
+            {pastMemories.map(mem => (
+              <View 
+                key={mem.id} 
+                style={[styles.memoryCard, { backgroundColor: colors.card, borderColor: colors.line }]}
+              >
+                <Image source={{ uri: mem.cover }} style={styles.memoryCover} />
+                <View style={styles.memoryContent}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={[styles.memoryTitle, { color: colors.fg }]}>{mem.title}</Text>
+                    <Text style={[styles.memoryDate, { color: colors.muted }]}>{mem.date}</Text>
+                  </View>
+                  <Text style={[styles.memoryMeta, { color: colors.purple }]}>{mem.itemsCount}</Text>
+                  <Text style={[styles.memoryCurator, { color: colors.muted }]}>Preserved by {mem.curator}</Text>
+                  
+                  <TouchableOpacity 
+                    style={[styles.memoryReplayBtn, { backgroundColor: colors.purpleSoft }]}
+                    onPress={() => Alert.alert('Celebration Memory', `Reliving ${mem.title}...`)}
+                  >
+                    <Feather name="play-circle" size={14} color={colors.purple} />
+                    <Text style={[styles.memoryReplayText, { color: colors.purple }]}>Relive Celebration</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
           </View>
-
-          <View style={styles.addTagRow}>
-            <TextInput 
-              placeholder="Add item (e.g. Perfume, Airpods)..."
-              placeholderTextColor={HBD_THEME.colors.muted}
-              value={newWish}
-              onChangeText={setNewWish}
-              style={styles.tagInput}
-              onSubmitEditing={handleAddWish}
-            />
-            <TouchableOpacity style={styles.addTagBtn} onPress={handleAddWish}>
-              <Feather name="plus" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Things to Avoid / Allergies */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: HBD_THEME.colors.coralSoft }]}>
-              <Feather name="shield" size={14} color={HBD_THEME.colors.coral} />
-            </View>
-            <View>
-              <Text style={styles.sectionTitle}>Things to Avoid / Allergies</Text>
-              <Text style={styles.sectionSubtitle}>Prevents awkward or allergic gifts.</Text>
-            </View>
-          </View>
-
-          <View style={styles.tagWrap}>
-            {avoidList.map((item, i) => (
-              <View key={i} style={styles.avoidChip}>
-                <Text style={styles.avoidChipText}>{item}</Text>
-                <TouchableOpacity onPress={() => handleRemoveAvoid(item)}>
-                  <Feather name="x" size={12} color={HBD_THEME.colors.coral} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.addTagRow}>
-            <TextInput 
-              placeholder="Add allergy/dislike (e.g. Lilies, Alcohol)..."
-              placeholderTextColor={HBD_THEME.colors.muted}
-              value={newAvoid}
-              onChangeText={setNewAvoid}
-              style={styles.tagInput}
-              onSubmitEditing={handleAddAvoid}
-            />
-            <TouchableOpacity style={[styles.addTagBtn, { backgroundColor: HBD_THEME.colors.coral }]} onPress={handleAddAvoid}>
-              <Feather name="plus" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Privacy & Surprise Protection */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Privacy & Delivery Security</Text>
-          <Text style={styles.sectionSubtitle}>Control what circle members see.</Text>
-
-          <View style={styles.toggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.toggleLabel}>Birthday Visible to Friends Only</Text>
-              <Text style={styles.toggleDesc}>Keep celebration date within your verified circle.</Text>
-            </View>
-            <Switch 
-              value={isFriendsOnly} 
-              onValueChange={setIsFriendsOnly} 
-              trackColor={{ false: '#ddd', true: HBD_THEME.colors.purple }}
-            />
-          </View>
-
-          <View style={styles.toggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.toggleLabel}>Display Age & Milestone</Text>
-              <Text style={styles.toggleDesc}>Show "Turns 30" badge on celebration reel.</Text>
-            </View>
-            <Switch 
-              value={showAge} 
-              onValueChange={setShowAge} 
-              trackColor={{ false: '#ddd', true: HBD_THEME.colors.purple }}
-            />
-          </View>
-
-          <View style={[styles.toggleRow, { borderBottomWidth: 0 }]}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.toggleLabel}>Encrypted Address for Surprise Gifts</Text>
-              <Text style={styles.toggleDesc}>Friends can send gifts without seeing your private street address.</Text>
-            </View>
-            <Switch 
-              value={addressProtected} 
-              onValueChange={setAddressProtected} 
-              trackColor={{ false: '#ddd', true: HBD_THEME.colors.purple }}
-            />
-          </View>
-        </View>
-
-        {/* Save Button */}
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveProfile}>
-          <Feather name="check-circle" size={16} color="#FFFFFF" />
-          <Text style={styles.saveBtnText}>Save Changes</Text>
-        </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -247,21 +350,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: HBD_THEME.colors.background,
   },
   scroll: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 40,
+    paddingBottom: 90,
   },
   profileHeaderCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: HBD_THEME.borderRadius.md,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
     padding: 18,
     marginBottom: 16,
-    shadowColor: HBD_THEME.colors.purple,
+    shadowColor: '#5B2A86',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
@@ -281,13 +381,11 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     borderWidth: 2,
-    borderColor: HBD_THEME.colors.gold,
   },
   cameraBtn: {
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: HBD_THEME.colors.purple,
     width: 22,
     height: 22,
     borderRadius: 11,
@@ -296,40 +394,34 @@ const styles = StyleSheet.create({
   },
   fullName: {
     fontSize: 18,
-    fontFamily: HBD_THEME.typography.headingFont,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Poppins-Bold',
   },
   handleText: {
     fontSize: 13,
-    fontFamily: HBD_THEME.typography.bodyRegular,
-    color: HBD_THEME.colors.muted,
+    fontFamily: 'Inter-Regular',
   },
   locationPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     alignSelf: 'flex-start',
     paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
     marginTop: 4,
   },
   locationText: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.bodyMedium,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Inter-Medium',
   },
   bioText: {
     fontSize: 13,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Inter-Regular',
     lineHeight: 18,
     marginBottom: 14,
   },
   countdownBanner: {
-    backgroundColor: HBD_THEME.colors.purple,
-    borderRadius: HBD_THEME.borderRadius.sm,
+    borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -345,26 +437,47 @@ const styles = StyleSheet.create({
   },
   countdownTag: {
     fontSize: 9,
-    fontFamily: HBD_THEME.typography.headingExtraBold,
-    color: HBD_THEME.colors.gold,
+    fontFamily: 'Poppins-Bold',
     letterSpacing: 0.8,
   },
   countdownTitle: {
     fontSize: 14,
-    fontFamily: HBD_THEME.typography.headingFont,
+    fontFamily: 'Poppins-Bold',
     color: '#FFFFFF',
   },
   countdownSub: {
     fontSize: 10,
-    fontFamily: HBD_THEME.typography.bodyFont,
+    fontFamily: 'Inter-Regular',
     color: 'rgba(255, 255, 255, 0.75)',
     marginTop: 2,
   },
-  sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: HBD_THEME.borderRadius.md,
+  tabBar: {
+    flexDirection: 'row',
+    borderRadius: 999,
+    padding: 4,
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
+    marginBottom: 16,
+  },
+  tabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: 999,
+  },
+  tabBtnText: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+  },
+  tabBtnTextActive: {
+    color: '#FFFFFF',
+    fontFamily: 'Inter-Bold',
+  },
+  sectionCard: {
+    borderRadius: 18,
+    borderWidth: 1,
     padding: 16,
     marginBottom: 16,
   },
@@ -378,19 +491,16 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sectionTitle: {
     fontSize: 15,
-    fontFamily: HBD_THEME.typography.headingSemiBold,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Poppins-Bold',
   },
   sectionSubtitle: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.muted,
+    fontFamily: 'Inter-Regular',
   },
   tagWrap: {
     flexDirection: 'row',
@@ -402,29 +512,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
   },
   wishChipText: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodyMedium,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Inter-Medium',
   },
   avoidChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: HBD_THEME.colors.coralSoft,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
   },
   avoidChipText: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodyMedium,
-    color: HBD_THEME.colors.coral,
+    fontFamily: 'Inter-Medium',
   },
   addTagRow: {
     flexDirection: 'row',
@@ -433,16 +539,13 @@ const styles = StyleSheet.create({
   tagInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 8,
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Inter-Regular',
   },
   addTagBtn: {
-    backgroundColor: HBD_THEME.colors.purple,
     width: 38,
     height: 38,
     borderRadius: 19,
@@ -455,33 +558,83 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4ECE1',
   },
   toggleLabel: {
     fontSize: 13,
-    fontFamily: HBD_THEME.typography.headingSemiBold,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Poppins-Bold',
   },
   toggleDesc: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.muted,
+    fontFamily: 'Inter-Regular',
     marginTop: 2,
     paddingRight: 10,
   },
   saveBtn: {
-    backgroundColor: HBD_THEME.colors.purple,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
     marginTop: 8,
   },
   saveBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: HBD_THEME.typography.headingBold,
+    fontFamily: 'Poppins-Bold',
+  },
+  memoriesCol: {
+    gap: 14,
+  },
+  memoryVaultHeading: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
+  },
+  memoryVaultSub: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    marginBottom: 6,
+  },
+  memoryCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  memoryCover: {
+    width: '100%',
+    height: 140,
+  },
+  memoryContent: {
+    padding: 16,
+  },
+  memoryTitle: {
+    fontSize: 15,
+    fontFamily: 'Poppins-Bold',
+  },
+  memoryDate: {
+    fontSize: 11,
+    fontFamily: 'Inter-Regular',
+  },
+  memoryMeta: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    marginVertical: 4,
+  },
+  memoryCurator: {
+    fontSize: 11,
+    fontFamily: 'Inter-Regular',
+    marginBottom: 10,
+  },
+  memoryReplayBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  memoryReplayText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
   },
 });

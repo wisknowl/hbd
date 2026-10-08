@@ -5,8 +5,7 @@ import {
   Text, 
   TouchableOpacity, 
   SafeAreaView, 
-  ActivityIndicator,
-  Image
+  ActivityIndicator 
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
@@ -24,13 +23,13 @@ import {
   Inter_700Bold 
 } from '@expo-google-fonts/inter';
 
-import { CelebrationReelScreen } from './src/screens/CelebrationReelScreen';
-import { DatesScreen } from './src/screens/DatesScreen';
+import { ThemeProvider, useAppTheme } from './src/context/ThemeContext';
+import { HomeScreen } from './src/screens/HomeScreen';
 import { PackagesScreen } from './src/screens/PackagesScreen';
-import { FriendsScreen } from './src/screens/FriendsScreen';
+import { DatesScreen } from './src/screens/DatesScreen';
+import { InboxScreen } from './src/screens/InboxScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { PlannerModalScreen } from './src/screens/PlannerModalScreen';
-import { HBD_THEME } from './src/theme';
 import type { ReelPost } from '../shared/types';
 
 const INITIAL_REELS: ReelPost[] = [
@@ -102,23 +101,15 @@ const INITIAL_REELS: ReelPost[] = [
   }
 ];
 
-export default function App() {
-  const [fontsLoaded] = useFonts({
-    'Poppins-Medium': Poppins_500Medium,
-    'Poppins-SemiBold': Poppins_600SemiBold,
-    'Poppins-Bold': Poppins_700Bold,
-    'Poppins-ExtraBold': Poppins_800ExtraBold,
-    'Inter-Regular': Inter_400Regular,
-    'Inter-Medium': Inter_500Medium,
-    'Inter-SemiBold': Inter_600SemiBold,
-    'Inter-Bold': Inter_700Bold,
-  });
+type BottomTab = 'home' | 'gifts' | 'hbdays' | 'inbox' | 'profile';
 
-  const [currentTab, setCurrentTab] = useState<'reel' | 'dates' | 'packages' | 'friends' | 'profile'>('reel');
+function MainApp() {
+  const { colors, isDark } = useAppTheme();
+  const [currentTab, setCurrentTab] = useState<BottomTab>('home');
   const [reels, setReels] = useState<ReelPost[]>(INITIAL_REELS);
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
   const [plannerCelebrant, setPlannerCelebrant] = useState('');
-  const [selectedFriendForGifts, setSelectedFriendForGifts] = useState<string | undefined>(undefined);
+  const [selectedRecipientForGifts, setSelectedRecipientForGifts] = useState<string | undefined>(undefined);
 
   const handleCheer = (id: string) => {
     setReels(prev => prev.map(r => r.id === id ? { ...r, cheerCount: r.cheerCount + 1, isCheered: true } : r));
@@ -130,133 +121,164 @@ export default function App() {
   };
 
   const handleOpenGiftsForPerson = (personName: string) => {
-    setSelectedFriendForGifts(personName);
-    setCurrentTab('packages');
+    setSelectedRecipientForGifts(personName);
+    setCurrentTab('gifts');
   };
 
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={HBD_THEME.colors.gold} />
-        <Text style={styles.loadingText}>HBD Foundation</Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <StatusBar style={currentTab === 'reel' ? 'light' : 'dark'} />
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       
-      {/* Top Header Bar (when not in full immersion reel) */}
-      {currentTab !== 'reel' && (
-        <SafeAreaView style={styles.topHeader}>
-          <View style={styles.brandRow}>
-            <View style={styles.brandBadge}>
-              <Text style={styles.brandBadgeText}>HBD</Text>
-            </View>
-            <View>
-              <Text style={styles.brandTitle}>HBD Foundation</Text>
-              <Text style={styles.brandSlogan}>Celebrate What Matters</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity 
-            style={[styles.profileAvatarBtn, currentTab === 'profile' && styles.profileAvatarBtnActive]}
-            onPress={() => setCurrentTab('profile')}
-          >
-            <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' }} 
-              style={styles.headerAvatar}
-            />
-          </TouchableOpacity>
-        </SafeAreaView>
-      )}
-
-      {/* Screen Views */}
+      {/* Active Screen View */}
       <View style={{ flex: 1 }}>
-        {currentTab === 'reel' && (
-          <CelebrationReelScreen 
-            reels={reels} 
-            onCheer={handleCheer}
-            onOpenPlanner={(reel) => handleOpenPlanner(reel.user.fullName)}
+        {currentTab === 'home' && (
+          <HomeScreen
+            reels={reels}
+            onCheerReel={handleCheer}
+            onOpenPlanner={handleOpenPlanner}
             onOpenGifts={handleOpenGiftsForPerson}
+            onNavigateToInbox={() => setCurrentTab('inbox')}
           />
         )}
 
-        {currentTab === 'dates' && (
+        {currentTab === 'gifts' && (
+          <PackagesScreen 
+            preselectedRecipient={selectedRecipientForGifts}
+            onSelectPackage={(title) => handleOpenPlanner(title)}
+          />
+        )}
+
+        {currentTab === 'hbdays' && (
           <DatesScreen 
             onPlanCelebration={(item) => handleOpenPlanner(item ? item.celebrant : '')}
             onOpenGifts={handleOpenGiftsForPerson}
           />
         )}
 
-        {currentTab === 'packages' && (
-          <PackagesScreen 
-            preselectedRecipient={selectedFriendForGifts}
-            onSelectPackage={(title) => handleOpenPlanner(title)}
-          />
-        )}
-
-        {currentTab === 'friends' && (
-          <FriendsScreen 
-            onOpenGiftsForFriend={handleOpenGiftsForPerson}
-            onOpenPlannerForFriend={(name) => handleOpenPlanner(name)}
+        {currentTab === 'inbox' && (
+          <InboxScreen
+            onOpenGifts={handleOpenGiftsForPerson}
+            onOpenPlanner={handleOpenPlanner}
           />
         )}
 
         {currentTab === 'profile' && (
           <ProfileScreen 
             onOpenPlanner={() => handleOpenPlanner('')}
-            onNavigateToFriends={() => setCurrentTab('friends')}
           />
         )}
       </View>
 
-      {/* Bottom Tab Navigation */}
-      <SafeAreaView style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentTab('reel')}>
-          <Feather 
-            name="film" 
-            size={20} 
-            color={currentTab === 'reel' ? HBD_THEME.colors.purple : '#8A8294'} 
-          />
-          <Text style={[styles.navText, currentTab === 'reel' && styles.navTextActive]}>Moments</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentTab('dates')}>
-          <Feather 
-            name="calendar" 
-            size={20} 
-            color={currentTab === 'dates' ? HBD_THEME.colors.purple : '#8A8294'} 
-          />
-          <Text style={[styles.navText, currentTab === 'dates' && styles.navTextActive]}>HBDays</Text>
-        </TouchableOpacity>
-
-        {/* Center Floating Action Button (+) */}
+      {/* 5-Tab Bottom Navigation: Home | Gifts | HBDays | Inbox | Profile */}
+      <SafeAreaView style={[
+        styles.bottomNav, 
+        { 
+          backgroundColor: colors.bottomNavBg, 
+          borderTopColor: colors.bottomNavBorder 
+        }
+      ]}>
+        {/* Tab 1: Home */}
         <TouchableOpacity 
-          style={styles.floatingCenterBtn}
-          onPress={() => handleOpenPlanner('')}
-          activeOpacity={0.85}
+          style={styles.navItem} 
+          onPress={() => setCurrentTab('home')}
+          activeOpacity={0.7}
         >
-          <Feather name="plus" size={24} color={HBD_THEME.colors.charcoal} />
+          <Feather 
+            name="home" 
+            size={21} 
+            color={currentTab === 'home' ? colors.purple : colors.muted} 
+          />
+          <Text style={[
+            styles.navText, 
+            { color: currentTab === 'home' ? colors.purple : colors.muted },
+            currentTab === 'home' && styles.navTextActive
+          ]}>
+            Home
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentTab('packages')}>
+        {/* Tab 2: Gifts */}
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setCurrentTab('gifts')}
+          activeOpacity={0.7}
+        >
           <Feather 
             name="gift" 
-            size={20} 
-            color={currentTab === 'packages' ? HBD_THEME.colors.purple : '#8A8294'} 
+            size={21} 
+            color={currentTab === 'gifts' ? colors.purple : colors.muted} 
           />
-          <Text style={[styles.navText, currentTab === 'packages' && styles.navTextActive]}>Gifts</Text>
+          <Text style={[
+            styles.navText, 
+            { color: currentTab === 'gifts' ? colors.purple : colors.muted },
+            currentTab === 'gifts' && styles.navTextActive
+          ]}>
+            Gifts
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentTab('friends')}>
+        {/* Tab 3: HBDays */}
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setCurrentTab('hbdays')}
+          activeOpacity={0.7}
+        >
           <Feather 
-            name="users" 
-            size={20} 
-            color={currentTab === 'friends' ? HBD_THEME.colors.purple : '#8A8294'} 
+            name="calendar" 
+            size={21} 
+            color={currentTab === 'hbdays' ? colors.purple : colors.muted} 
           />
-          <Text style={[styles.navText, currentTab === 'friends' && styles.navTextActive]}>Circle</Text>
+          <Text style={[
+            styles.navText, 
+            { color: currentTab === 'hbdays' ? colors.purple : colors.muted },
+            currentTab === 'hbdays' && styles.navTextActive
+          ]}>
+            HBDays
+          </Text>
+        </TouchableOpacity>
+
+        {/* Tab 4: Inbox */}
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setCurrentTab('inbox')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.inboxIconWrap}>
+            <Feather 
+              name="message-square" 
+              size={21} 
+              color={currentTab === 'inbox' ? colors.purple : colors.muted} 
+            />
+            {/* Unread activity dot */}
+            <View style={[styles.unreadDot, { backgroundColor: colors.coral }]} />
+          </View>
+          <Text style={[
+            styles.navText, 
+            { color: currentTab === 'inbox' ? colors.purple : colors.muted },
+            currentTab === 'inbox' && styles.navTextActive
+          ]}>
+            Inbox
+          </Text>
+        </TouchableOpacity>
+
+        {/* Tab 5: Profile */}
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setCurrentTab('profile')}
+          activeOpacity={0.7}
+        >
+          <Feather 
+            name="user" 
+            size={21} 
+            color={currentTab === 'profile' ? colors.purple : colors.muted} 
+          />
+          <Text style={[
+            styles.navText, 
+            { color: currentTab === 'profile' ? colors.purple : colors.muted },
+            currentTab === 'profile' && styles.navTextActive
+          ]}>
+            Profile
+          </Text>
         </TouchableOpacity>
       </SafeAreaView>
 
@@ -270,111 +292,79 @@ export default function App() {
   );
 }
 
+export default function App() {
+  const [fontsLoaded] = useFonts({
+    'Poppins-Medium': Poppins_500Medium,
+    'Poppins-SemiBold': Poppins_600SemiBold,
+    'Poppins-Bold': Poppins_700Bold,
+    'Poppins-ExtraBold': Poppins_800ExtraBold,
+    'Inter-Regular': Inter_400Regular,
+    'Inter-Medium': Inter_500Medium,
+    'Inter-SemiBold': Inter_600SemiBold,
+    'Inter-Bold': Inter_700Bold,
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#F4B942" />
+        <Text style={styles.loadingText}>HBD Foundation</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ThemeProvider>
+      <MainApp />
+    </ThemeProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A080C',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: HBD_THEME.colors.purple,
+    backgroundColor: '#5B2A86',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
   },
   loadingText: {
-    color: HBD_THEME.colors.gold,
+    color: '#F4B942',
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 1,
   },
-  topHeader: {
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: HBD_THEME.colors.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  brandBadge: {
-    backgroundColor: HBD_THEME.colors.purple,
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandBadgeText: {
-    color: HBD_THEME.colors.gold,
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  brandTitle: {
-    fontSize: 15,
-    fontFamily: HBD_THEME.typography.headingFont,
-    color: HBD_THEME.colors.purple,
-    lineHeight: 18,
-  },
-  brandSlogan: {
-    fontSize: 10,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.muted,
-  },
-  profileAvatarBtn: {
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  profileAvatarBtnActive: {
-    borderColor: HBD_THEME.colors.purple,
-  },
-  headerAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
   bottomNav: {
-    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: HBD_THEME.colors.border,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   navItem: {
     alignItems: 'center',
-    minWidth: 50,
+    minWidth: 54,
+  },
+  inboxIconWrap: {
+    position: 'relative',
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: -2,
+    right: -4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
   navText: {
     fontSize: 10,
-    fontFamily: HBD_THEME.typography.bodyMedium,
-    color: '#8A8294',
+    fontFamily: 'Inter-Medium',
     marginTop: 2,
   },
   navTextActive: {
-    color: HBD_THEME.colors.purple,
-    fontFamily: HBD_THEME.typography.bodyBold,
-  },
-  floatingCenterBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: HBD_THEME.colors.gold,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: -22,
-    shadowColor: HBD_THEME.colors.purple,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
+    fontFamily: 'Inter-Bold',
   },
 });

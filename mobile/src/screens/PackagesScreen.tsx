@@ -5,12 +5,12 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  SafeAreaView,
-  Image,
-  Alert
+  SafeAreaView, 
+  Image, 
+  Alert 
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { HBD_THEME } from '../theme';
+import { useAppTheme } from '../context/ThemeContext';
 
 interface PackagesScreenProps {
   onSelectPackage: (name: string) => void;
@@ -84,6 +84,7 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
   onSelectPackage,
   preselectedRecipient
 }) => {
+  const { colors } = useAppTheme();
   const [activeTab, setActiveTab] = useState<'GIFTS' | 'PACKAGES'>('GIFTS');
   const [selectedRecipient, setSelectedRecipient] = useState<string>(preselectedRecipient || 'All');
 
@@ -144,45 +145,45 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Screen Header */}
         <View style={styles.header}>
-          <View style={styles.kickerPill}>
-            <Feather name="gift" size={12} color={HBD_THEME.colors.purple} />
-            <Text style={styles.kickerText}>HBD Universal Gift Engine</Text>
+          <View style={[styles.kickerPill, { backgroundColor: colors.purpleSoft }]}>
+            <Feather name="gift" size={12} color={colors.purple} />
+            <Text style={[styles.kickerText, { color: colors.purple }]}>Universal Gift Engine</Text>
           </View>
-          <Text style={styles.title}>The Celebration Layer Above E-Commerce</Text>
-          <Text style={styles.subtitle}>
-            From connected Amazon & local artisan gifts to fully orchestrated celebration surprise packages.
+          <Text style={[styles.title, { color: colors.purple }]}>The Celebration Layer Above E-Commerce</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>
+            Connected Amazon gifts, local florists & bakers, and full surprise packages.
           </Text>
 
           {/* Tab Selector: Gifts vs Packages */}
-          <View style={styles.tabToggle}>
+          <View style={[styles.tabToggle, { backgroundColor: colors.card, borderColor: colors.line }]}>
             <TouchableOpacity 
-              style={[styles.toggleBtn, activeTab === 'GIFTS' && styles.toggleBtnActive]}
+              style={[styles.toggleBtn, activeTab === 'GIFTS' && { backgroundColor: colors.purple }]}
               onPress={() => setActiveTab('GIFTS')}
             >
               <Feather 
                 name="shopping-bag" 
                 size={14} 
-                color={activeTab === 'GIFTS' ? '#FFFFFF' : HBD_THEME.colors.muted} 
+                color={activeTab === 'GIFTS' ? '#FFFFFF' : colors.muted} 
               />
-              <Text style={[styles.toggleBtnText, activeTab === 'GIFTS' && styles.toggleBtnTextActive]}>
+              <Text style={[styles.toggleBtnText, activeTab === 'GIFTS' ? styles.toggleBtnTextActive : { color: colors.muted }]}>
                 Gift Ideas
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.toggleBtn, activeTab === 'PACKAGES' && styles.toggleBtnActive]}
+              style={[styles.toggleBtn, activeTab === 'PACKAGES' && { backgroundColor: colors.purple }]}
               onPress={() => setActiveTab('PACKAGES')}
             >
               <Feather 
                 name="award" 
                 size={14} 
-                color={activeTab === 'PACKAGES' ? '#FFFFFF' : HBD_THEME.colors.muted} 
+                color={activeTab === 'PACKAGES' ? '#FFFFFF' : colors.muted} 
               />
-              <Text style={[styles.toggleBtnText, activeTab === 'PACKAGES' && styles.toggleBtnTextActive]}>
+              <Text style={[styles.toggleBtnText, activeTab === 'PACKAGES' ? styles.toggleBtnTextActive : { color: colors.muted }]}>
                 Celebration Packages
               </Text>
             </TouchableOpacity>
@@ -193,20 +194,20 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
           <>
             {/* Person Filter Pills */}
             <View style={styles.recipientFilterSection}>
-              <Text style={styles.filterSectionLabel}>Tailored for your people:</Text>
+              <Text style={[styles.filterSectionLabel, { color: colors.fg }]}>Tailored for your people:</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recipientScroll}>
                 {recipients.map(r => (
                   <TouchableOpacity
                     key={r}
                     style={[
                       styles.recipientChip,
-                      selectedRecipient === r && styles.recipientChipActive
+                      { backgroundColor: selectedRecipient === r ? colors.gold : colors.card, borderColor: colors.line }
                     ]}
                     onPress={() => setSelectedRecipient(r)}
                   >
                     <Text style={[
                       styles.recipientChipText,
-                      selectedRecipient === r && styles.recipientChipTextActive
+                      { color: '#1A1A1A', fontFamily: selectedRecipient === r ? 'Poppins-Bold' : 'Inter-Medium' }
                     ]}>
                       {r}
                     </Text>
@@ -218,27 +219,30 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
             {/* Gifts Grid */}
             <View style={styles.giftsCol}>
               {filteredGifts.map(gift => (
-                <View key={gift.id} style={styles.giftCard}>
+                <View 
+                  key={gift.id} 
+                  style={[styles.giftCard, { backgroundColor: colors.card, borderColor: colors.line }]}
+                >
                   <Image source={{ uri: gift.image }} style={styles.giftImage} />
                   <View style={styles.giftContent}>
                     <View style={styles.giftTopMeta}>
-                      <View style={styles.categoryPill}>
-                        <Text style={styles.categoryPillText}>{gift.category}</Text>
+                      <View style={[styles.categoryPill, { backgroundColor: colors.purpleSoft }]}>
+                        <Text style={[styles.categoryPillText, { color: colors.purple }]}>{gift.category}</Text>
                       </View>
-                      <Text style={styles.giftPrice}>{gift.price}</Text>
+                      <Text style={[styles.giftPrice, { color: colors.purple }]}>{gift.price}</Text>
                     </View>
 
-                    <Text style={styles.giftTitle}>{gift.title}</Text>
+                    <Text style={[styles.giftTitle, { color: colors.fg }]}>{gift.title}</Text>
 
                     <View style={styles.providerRow}>
-                      <Feather name="truck" size={12} color={HBD_THEME.colors.purple} />
-                      <Text style={styles.providerText}>{gift.provider}</Text>
-                      <Text style={styles.providerDot}>•</Text>
-                      <Text style={styles.locationText}>{gift.location}</Text>
+                      <Feather name="truck" size={12} color={colors.purple} />
+                      <Text style={[styles.providerText, { color: colors.purple }]}>{gift.provider}</Text>
+                      <Text style={[styles.providerDot, { color: colors.muted }]}>•</Text>
+                      <Text style={[styles.locationText, { color: colors.muted }]}>{gift.location}</Text>
                     </View>
 
                     <TouchableOpacity 
-                      style={styles.orderBtn}
+                      style={[styles.orderBtn, { backgroundColor: colors.purple }]}
                       onPress={() => handleOrderGift(gift)}
                     >
                       <Feather name="gift" size={14} color="#FFFFFF" />
@@ -255,34 +259,37 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
             {packages.map((pkg) => (
               <View 
                 key={pkg.id} 
-                style={[styles.packageCard, pkg.featured && styles.packageCardFeatured]}
+                style={[
+                  styles.packageCard, 
+                  { backgroundColor: colors.card, borderColor: pkg.featured ? colors.gold : colors.line }
+                ]}
               >
                 {pkg.badge && (
-                  <View style={[styles.badge, pkg.featured && styles.badgeFeatured]}>
-                    <Text style={[styles.badgeText, pkg.featured && styles.badgeTextFeatured]}>
+                  <View style={[styles.badge, { backgroundColor: pkg.featured ? colors.gold : colors.purpleSoft }]}>
+                    <Text style={[styles.badgeText, { color: pkg.featured ? '#1A1A1A' : colors.purple }]}>
                       {pkg.badge}
                     </Text>
                   </View>
                 )}
                 
-                <Text style={styles.packageTitle}>{pkg.title}</Text>
-                <Text style={styles.packagePrice}>{pkg.price}</Text>
-                <Text style={styles.packageTagline}>{pkg.tagline}</Text>
+                <Text style={[styles.packageTitle, { color: colors.purple }]}>{pkg.title}</Text>
+                <Text style={[styles.packagePrice, { color: colors.fg }]}>{pkg.price}</Text>
+                <Text style={[styles.packageTagline, { color: colors.muted }]}>{pkg.tagline}</Text>
 
                 <View style={styles.featureList}>
                   {pkg.features.map((feat, i) => (
                     <View key={i} style={styles.featureRow}>
-                      <Feather name="check-circle" size={14} color={HBD_THEME.colors.gold} />
-                      <Text style={styles.featureText}>{feat}</Text>
+                      <Feather name="check-circle" size={14} color={colors.gold} />
+                      <Text style={[styles.featureText, { color: colors.fg }]}>{feat}</Text>
                     </View>
                   ))}
                 </View>
 
                 <TouchableOpacity 
-                  style={[styles.bookBtn, pkg.featured && styles.bookBtnFeatured]}
+                  style={[styles.bookBtn, { backgroundColor: pkg.featured ? colors.purple : colors.purpleSoft }]}
                   onPress={() => onSelectPackage(pkg.title)}
                 >
-                  <Text style={[styles.bookBtnText, pkg.featured && styles.bookBtnTextFeatured]}>
+                  <Text style={[styles.bookBtnText, { color: pkg.featured ? '#FFFFFF' : colors.purple }]}>
                     Book This Experience
                   </Text>
                 </TouchableOpacity>
@@ -298,55 +305,49 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: HBD_THEME.colors.background,
   },
   scroll: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 40,
+    paddingBottom: 90,
   },
   header: {
     marginBottom: 20,
+    marginTop: 8,
   },
   kickerPill: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     paddingVertical: 4,
     paddingHorizontal: 12,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
     marginBottom: 10,
   },
   kickerText: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.headingSemiBold,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Poppins-Bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   title: {
-    fontSize: 24,
-    fontFamily: HBD_THEME.typography.headingFont,
-    color: HBD_THEME.colors.purple,
-    letterSpacing: -0.5,
-    marginBottom: 6,
+    fontSize: 22,
+    fontFamily: 'Poppins-Bold',
+    letterSpacing: -0.4,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 13,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.muted,
-    lineHeight: 19,
+    fontFamily: 'Inter-Regular',
+    lineHeight: 18,
     marginBottom: 16,
   },
   tabToggle: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
     padding: 4,
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
   },
   toggleBtn: {
     flex: 1,
@@ -355,27 +356,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 9,
-    borderRadius: HBD_THEME.borderRadius.pill,
-  },
-  toggleBtnActive: {
-    backgroundColor: HBD_THEME.colors.purple,
+    borderRadius: 999,
   },
   toggleBtnText: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodySemiBold,
-    color: HBD_THEME.colors.muted,
+    fontFamily: 'Inter-SemiBold',
   },
   toggleBtnTextActive: {
     color: '#FFFFFF',
-    fontFamily: HBD_THEME.typography.headingBold,
+    fontFamily: 'Poppins-Bold',
   },
   recipientFilterSection: {
     marginBottom: 16,
   },
   filterSectionLabel: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.headingSemiBold,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Inter-SemiBold',
     marginBottom: 8,
   },
   recipientScroll: {
@@ -384,34 +380,20 @@ const styles = StyleSheet.create({
   recipientChip: {
     paddingVertical: 6,
     paddingHorizontal: 14,
-    borderRadius: HBD_THEME.borderRadius.pill,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
-  },
-  recipientChipActive: {
-    backgroundColor: HBD_THEME.colors.gold,
-    borderColor: HBD_THEME.colors.gold,
   },
   recipientChipText: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodyMedium,
-    color: HBD_THEME.colors.charcoal,
-  },
-  recipientChipTextActive: {
-    fontFamily: HBD_THEME.typography.headingBold,
-    color: HBD_THEME.colors.charcoal,
   },
   giftsCol: {
     gap: 16,
   },
   giftCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: HBD_THEME.borderRadius.md,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
     overflow: 'hidden',
-    shadowColor: HBD_THEME.colors.purple,
+    shadowColor: '#5B2A86',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
@@ -431,26 +413,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   categoryPill: {
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
   categoryPillText: {
     fontSize: 10,
-    fontFamily: HBD_THEME.typography.headingSemiBold,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Poppins-Bold',
     textTransform: 'uppercase',
   },
   giftPrice: {
     fontSize: 16,
-    fontFamily: HBD_THEME.typography.headingFont,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Poppins-Bold',
   },
   giftTitle: {
     fontSize: 15,
-    fontFamily: HBD_THEME.typography.headingSemiBold,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Inter-SemiBold',
     marginBottom: 8,
   },
   providerRow: {
@@ -461,90 +439,68 @@ const styles = StyleSheet.create({
   },
   providerText: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.bodyMedium,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Inter-Medium',
   },
   providerDot: {
     fontSize: 11,
-    color: HBD_THEME.colors.muted,
   },
   locationText: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.muted,
+    fontFamily: 'Inter-Regular',
   },
   orderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: HBD_THEME.colors.purple,
     paddingVertical: 10,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
   },
   orderBtnText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontFamily: HBD_THEME.typography.headingSemiBold,
+    fontFamily: 'Poppins-Bold',
   },
   packagesCol: {
     gap: 16,
   },
   packageCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: HBD_THEME.borderRadius.md,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
     padding: 20,
     position: 'relative',
-    shadowColor: HBD_THEME.colors.purple,
+    shadowColor: '#5B2A86',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 3,
   },
-  packageCardFeatured: {
-    borderColor: HBD_THEME.colors.gold,
-    borderWidth: 2,
-    backgroundColor: '#FFFCF7',
-  },
   badge: {
     position: 'absolute',
     top: 14,
     right: 14,
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: HBD_THEME.borderRadius.pill,
-  },
-  badgeFeatured: {
-    backgroundColor: HBD_THEME.colors.gold,
+    borderRadius: 999,
   },
   badgeText: {
     fontSize: 10,
-    fontFamily: HBD_THEME.typography.headingExtraBold,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Poppins-Bold',
     textTransform: 'uppercase',
-  },
-  badgeTextFeatured: {
-    color: HBD_THEME.colors.charcoal,
   },
   packageTitle: {
     fontSize: 18,
-    fontFamily: HBD_THEME.typography.headingFont,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Poppins-Bold',
     marginBottom: 4,
   },
   packagePrice: {
     fontSize: 20,
-    fontFamily: HBD_THEME.typography.headingExtraBold,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Poppins-Bold',
     marginBottom: 6,
   },
   packageTagline: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.muted,
+    fontFamily: 'Inter-Regular',
     marginBottom: 16,
   },
   featureList: {
@@ -558,25 +514,16 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Inter-Regular',
     flex: 1,
   },
   bookBtn: {
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     paddingVertical: 12,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
     alignItems: 'center',
   },
-  bookBtnFeatured: {
-    backgroundColor: HBD_THEME.colors.purple,
-  },
   bookBtnText: {
-    color: HBD_THEME.colors.purple,
     fontSize: 13,
-    fontFamily: HBD_THEME.typography.headingBold,
-  },
-  bookBtnTextFeatured: {
-    color: '#FFFFFF',
+    fontFamily: 'Poppins-Bold',
   },
 });

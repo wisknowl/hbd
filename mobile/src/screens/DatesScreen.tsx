@@ -10,7 +10,8 @@ import {
   Image
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { HBD_THEME } from '../theme';
+import { useAppTheme } from '../context/ThemeContext';
+import { FloatingCelebrateButton } from '../components/FloatingCelebrateButton';
 import type { ReminderItem } from '../../../shared/types';
 
 interface DatesScreenProps {
@@ -33,7 +34,7 @@ const INITIAL_REMINDERS: (ReminderItem & { avatar?: string; location?: string })
   },
   {
     id: 'rem-sarah',
-    title: 'Sarah Johnson’s Birthday',
+    title: 'Sarah Johnson’s 30th Birthday',
     category: 'BIRTHDAY',
     eventDate: '2026-10-24',
     daysRemaining: 16,
@@ -82,6 +83,7 @@ const INITIAL_REMINDERS: (ReminderItem & { avatar?: string; location?: string })
 ];
 
 export const DatesScreen: React.FC<DatesScreenProps> = ({ onPlanCelebration, onOpenGifts }) => {
+  const { colors } = useAppTheme();
   const [reminders, setReminders] = useState(INITIAL_REMINDERS);
   const [activeTab, setActiveTab] = useState<'ALL' | 'THIS_MONTH' | 'MILESTONES'>('ALL');
 
@@ -121,42 +123,45 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({ onPlanCelebration, onO
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Header Hero */}
         <View style={styles.header}>
           <View style={styles.kickerRow}>
-            <View style={styles.kickerPill}>
-              <Feather name="calendar" size={12} color={HBD_THEME.colors.purple} />
-              <Text style={styles.kickerText}>HBD Calendar of Joy</Text>
+            <View style={[styles.kickerPill, { backgroundColor: colors.purpleSoft }]}>
+              <Feather name="calendar" size={12} color={colors.purple} />
+              <Text style={[styles.kickerText, { color: colors.purple }]}>HBDays & Calendar</Text>
             </View>
-            <TouchableOpacity style={styles.syncBtn} onPress={handleSyncContacts}>
-              <Feather name="user-plus" size={13} color={HBD_THEME.colors.purple} />
-              <Text style={styles.syncBtnText}>Sync Contacts</Text>
+            <TouchableOpacity 
+              style={[styles.syncBtn, { backgroundColor: colors.card, borderColor: colors.line }]} 
+              onPress={handleSyncContacts}
+            >
+              <Feather name="user-plus" size={13} color={colors.purple} />
+              <Text style={[styles.syncBtnText, { color: colors.purple }]}>Sync Contacts</Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.heading}>Never Miss a Birthday</Text>
-          <Text style={styles.subheading}>
-            Upcoming celebrations in your circle. Plan in advance, orchestrate gifts, and deliver memories.
+          <Text style={[styles.heading, { color: colors.purple }]}>Never Miss an HBDay</Text>
+          <Text style={[styles.subheading, { color: colors.muted }]}>
+            Upcoming birthdays, milestones, and shared anniversaries in your circle.
           </Text>
 
           {/* Quick Highlight Milestone Card */}
-          <View style={styles.milestoneCard}>
+          <View style={[styles.milestoneCard, { backgroundColor: colors.purple }]}>
             <View style={styles.milestoneLeft}>
               <Text style={styles.milestoneIcon}>🎂</Text>
               <View>
-                <Text style={styles.milestoneNext}>NEXT UP IN 11 DAYS</Text>
+                <Text style={[styles.milestoneNext, { color: colors.gold }]}>NEXT UP IN 11 DAYS</Text>
                 <Text style={styles.milestoneName}>Mama Chantal turns 60</Text>
                 <Text style={styles.milestoneLocation}>Douala, Cameroon · Milestone Year</Text>
               </View>
             </View>
             <TouchableOpacity 
-              style={styles.milestoneAction}
+              style={[styles.milestoneAction, { backgroundColor: colors.gold }]}
               onPress={() => onPlanCelebration(reminders[0])}
             >
               <Text style={styles.milestoneActionText}>Plan</Text>
-              <Feather name="arrow-right" size={14} color="#FFFFFF" />
+              <Feather name="arrow-right" size={14} color="#1A1A1A" />
             </TouchableOpacity>
           </View>
         </View>
@@ -164,28 +169,37 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({ onPlanCelebration, onO
         {/* Tab Filters */}
         <View style={styles.tabRow}>
           <TouchableOpacity 
-            style={[styles.tabBtn, activeTab === 'ALL' && styles.tabBtnActive]}
+            style={[
+              styles.tabBtn, 
+              { backgroundColor: activeTab === 'ALL' ? colors.purple : colors.card, borderColor: colors.line }
+            ]}
             onPress={() => setActiveTab('ALL')}
           >
-            <Text style={[styles.tabText, activeTab === 'ALL' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: activeTab === 'ALL' ? '#FFFFFF' : colors.muted }]}>
               All ({reminders.length})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.tabBtn, activeTab === 'THIS_MONTH' && styles.tabBtnActive]}
+            style={[
+              styles.tabBtn, 
+              { backgroundColor: activeTab === 'THIS_MONTH' ? colors.purple : colors.card, borderColor: colors.line }
+            ]}
             onPress={() => setActiveTab('THIS_MONTH')}
           >
-            <Text style={[styles.tabText, activeTab === 'THIS_MONTH' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: activeTab === 'THIS_MONTH' ? '#FFFFFF' : colors.muted }]}>
               Next 30 Days
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.tabBtn, activeTab === 'MILESTONES' && styles.tabBtnActive]}
+            style={[
+              styles.tabBtn, 
+              { backgroundColor: activeTab === 'MILESTONES' ? colors.purple : colors.card, borderColor: colors.line }
+            ]}
             onPress={() => setActiveTab('MILESTONES')}
           >
-            <Text style={[styles.tabText, activeTab === 'MILESTONES' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: activeTab === 'MILESTONES' ? '#FFFFFF' : colors.muted }]}>
               Milestones
             </Text>
           </TouchableOpacity>
@@ -196,49 +210,55 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({ onPlanCelebration, onO
           {filteredReminders.map(item => {
             const isUrgent = item.daysRemaining <= 14;
             return (
-              <View key={item.id} style={styles.card}>
+              <View 
+                key={item.id} 
+                style={[
+                  styles.card, 
+                  { backgroundColor: colors.card, borderColor: colors.line }
+                ]}
+              >
                 <View style={styles.cardHeader}>
                   <View style={styles.userRow}>
                     {item.avatar ? (
-                      <Image source={{ uri: item.avatar }} style={styles.avatar} />
+                      <Image source={{ uri: item.avatar }} style={[styles.avatar, { borderColor: colors.gold }]} />
                     ) : (
-                      <View style={styles.avatarFallback}>
+                      <View style={[styles.avatarFallback, { backgroundColor: colors.purpleSoft }]}>
                         <Text style={{ fontSize: 18 }}>{item.icon}</Text>
                       </View>
                     )}
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.cardTitle}>{item.title}</Text>
+                      <Text style={[styles.cardTitle, { color: colors.fg }]}>{item.title}</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                        <Feather name="map-pin" size={11} color={HBD_THEME.colors.muted} />
-                        <Text style={styles.cardMeta}>{item.location || 'Global'}</Text>
-                        <Text style={styles.cardMeta}>•</Text>
-                        <Text style={styles.cardMeta}>{item.eventDate}</Text>
+                        <Feather name="map-pin" size={11} color={colors.muted} />
+                        <Text style={[styles.cardMeta, { color: colors.muted }]}>{item.location || 'Global'}</Text>
+                        <Text style={[styles.cardMeta, { color: colors.muted }]}>•</Text>
+                        <Text style={[styles.cardMeta, { color: colors.muted }]}>{item.eventDate}</Text>
                       </View>
                     </View>
                   </View>
 
-                  <View style={[styles.daysPill, isUrgent && styles.daysPillUrgent]}>
-                    <Text style={[styles.daysNumber, isUrgent && styles.daysNumberUrgent]}>
+                  <View style={[styles.daysPill, { backgroundColor: isUrgent ? colors.coralSoft : colors.purpleSoft }]}>
+                    <Text style={[styles.daysNumber, { color: isUrgent ? colors.coral : colors.purple }]}>
                       {item.daysRemaining}
                     </Text>
-                    <Text style={[styles.daysLabel, isUrgent && styles.daysLabelUrgent]}>
+                    <Text style={[styles.daysLabel, { color: isUrgent ? colors.coral : colors.purple }]}>
                       days left
                     </Text>
                   </View>
                 </View>
 
                 {/* Bottom Actions */}
-                <View style={styles.cardActions}>
+                <View style={[styles.cardActions, { borderTopColor: colors.line }]}>
                   <TouchableOpacity 
-                    style={styles.cardBtnSecondary}
+                    style={[styles.cardBtnSecondary, { backgroundColor: colors.purpleSoft }]}
                     onPress={() => onOpenGifts && onOpenGifts(item.celebrant)}
                   >
-                    <Feather name="gift" size={14} color={HBD_THEME.colors.purple} />
-                    <Text style={styles.cardBtnSecondaryText}>Gift Ideas</Text>
+                    <Feather name="gift" size={14} color={colors.purple} />
+                    <Text style={[styles.cardBtnSecondaryText, { color: colors.purple }]}>Gift Ideas</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity 
-                    style={styles.cardBtnPrimary}
+                    style={[styles.cardBtnPrimary, { backgroundColor: colors.purple }]}
                     onPress={() => onPlanCelebration(item)}
                   >
                     <Feather name="star" size={14} color="#FFFFFF" />
@@ -252,6 +272,9 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({ onPlanCelebration, onO
           })}
         </View>
       </ScrollView>
+
+      {/* Floating Action Button (+) */}
+      <FloatingCelebrateButton onPress={() => onPlanCelebration()} />
     </SafeAreaView>
   );
 };
@@ -259,15 +282,15 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({ onPlanCelebration, onO
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: HBD_THEME.colors.background,
   },
   scroll: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 40,
+    paddingBottom: 90,
   },
   header: {
     marginBottom: 20,
+    marginTop: 8,
   },
   kickerRow: {
     flexDirection: 'row',
@@ -279,15 +302,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     paddingVertical: 4,
     paddingHorizontal: 12,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
   },
   kickerText: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.headingSemiBold,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Poppins-Bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -295,40 +316,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
   },
   syncBtnText: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.bodySemiBold,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Inter-SemiBold',
   },
   heading: {
-    fontSize: 26,
-    fontFamily: HBD_THEME.typography.headingFont,
-    color: HBD_THEME.colors.purple,
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
     letterSpacing: -0.5,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   subheading: {
     fontSize: 13,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.muted,
-    lineHeight: 19,
+    fontFamily: 'Inter-Regular',
+    lineHeight: 18,
     marginBottom: 16,
   },
   milestoneCard: {
-    backgroundColor: HBD_THEME.colors.purple,
-    borderRadius: HBD_THEME.borderRadius.md,
+    borderRadius: 20,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: HBD_THEME.colors.purple,
+    shadowColor: '#5B2A86',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -345,34 +360,32 @@ const styles = StyleSheet.create({
   },
   milestoneNext: {
     fontSize: 10,
-    fontFamily: HBD_THEME.typography.headingExtraBold,
-    color: HBD_THEME.colors.gold,
+    fontFamily: 'Poppins-Bold',
     letterSpacing: 0.8,
   },
   milestoneName: {
     fontSize: 15,
-    fontFamily: HBD_THEME.typography.headingFont,
+    fontFamily: 'Poppins-Bold',
     color: '#FFFFFF',
   },
   milestoneLocation: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.bodyFont,
+    fontFamily: 'Inter-Regular',
     color: 'rgba(255, 255, 255, 0.75)',
     marginTop: 2,
   },
   milestoneAction: {
-    backgroundColor: HBD_THEME.colors.gold,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
   },
   milestoneActionText: {
-    color: HBD_THEME.colors.charcoal,
+    color: '#1A1A1A',
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.headingBold,
+    fontFamily: 'Poppins-Bold',
   },
   tabRow: {
     flexDirection: 'row',
@@ -382,34 +395,21 @@ const styles = StyleSheet.create({
   tabBtn: {
     paddingVertical: 7,
     paddingHorizontal: 14,
-    borderRadius: HBD_THEME.borderRadius.pill,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
-  },
-  tabBtnActive: {
-    backgroundColor: HBD_THEME.colors.purple,
-    borderColor: HBD_THEME.colors.purple,
   },
   tabText: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodyMedium,
-    color: HBD_THEME.colors.muted,
-  },
-  tabTextActive: {
-    color: '#FFFFFF',
-    fontFamily: HBD_THEME.typography.bodyBold,
+    fontFamily: 'Inter-SemiBold',
   },
   list: {
     gap: 12,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: HBD_THEME.borderRadius.md,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: HBD_THEME.colors.border,
     padding: 16,
-    shadowColor: HBD_THEME.colors.purple,
+    shadowColor: '#5B2A86',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -432,60 +432,43 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: HBD_THEME.colors.gold,
   },
   avatarFallback: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
     fontSize: 15,
-    fontFamily: HBD_THEME.typography.headingSemiBold,
-    color: HBD_THEME.colors.charcoal,
+    fontFamily: 'Inter-SemiBold',
   },
   cardMeta: {
     fontSize: 11,
-    fontFamily: HBD_THEME.typography.bodyFont,
-    color: HBD_THEME.colors.muted,
+    fontFamily: 'Inter-Regular',
   },
   daysPill: {
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: HBD_THEME.borderRadius.sm,
+    borderRadius: 12,
     minWidth: 54,
-  },
-  daysPillUrgent: {
-    backgroundColor: HBD_THEME.colors.coralSoft,
   },
   daysNumber: {
     fontSize: 16,
-    fontFamily: HBD_THEME.typography.headingFont,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Poppins-Bold',
     lineHeight: 18,
-  },
-  daysNumberUrgent: {
-    color: HBD_THEME.colors.coral,
   },
   daysLabel: {
     fontSize: 9,
-    fontFamily: HBD_THEME.typography.bodyMedium,
-    color: HBD_THEME.colors.purple,
-  },
-  daysLabelUrgent: {
-    color: HBD_THEME.colors.coral,
+    fontFamily: 'Inter-Medium',
   },
   cardActions: {
     flexDirection: 'row',
     gap: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F4ECE1',
     paddingTop: 12,
   },
   cardBtnSecondary: {
@@ -494,14 +477,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: HBD_THEME.colors.purpleSoft,
     paddingVertical: 9,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
   },
   cardBtnSecondaryText: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodySemiBold,
-    color: HBD_THEME.colors.purple,
+    fontFamily: 'Inter-SemiBold',
   },
   cardBtnPrimary: {
     flex: 1,
@@ -509,13 +490,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: HBD_THEME.colors.purple,
     paddingVertical: 9,
-    borderRadius: HBD_THEME.borderRadius.pill,
+    borderRadius: 999,
   },
   cardBtnPrimaryText: {
     fontSize: 12,
-    fontFamily: HBD_THEME.typography.bodySemiBold,
+    fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
   },
 });
