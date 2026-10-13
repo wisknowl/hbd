@@ -31,6 +31,32 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Universal Joy Engine Daily Toast Atomic Counter (Simulates Redis INCR celebration:toast:YYYY-MM-DD)
+const dailyToastCounters: Record<string, number> = {
+  '2026-10-12': 1428,
+  '2026-10-13': 1894
+};
+
+app.get('/api/toast/today', (req, res) => {
+  const dateKey = (req.query.date as string) || '2026-10-12';
+  const count = dailyToastCounters[dateKey] || 1428;
+  res.json({ date: dateKey, toastCount: count });
+});
+
+app.post('/api/toast/increment', (req, res) => {
+  const dateKey = (req.body.date as string) || '2026-10-12';
+  if (!dailyToastCounters[dateKey]) {
+    dailyToastCounters[dateKey] = 1428;
+  }
+  dailyToastCounters[dateKey] += 1;
+  res.json({
+    success: true,
+    date: dateKey,
+    toastCount: dailyToastCounters[dateKey],
+    message: 'Universal Joy Toast registered atomically (Redis key-value simulation)!'
+  });
+});
+
 // TikTok-style Celebration Reel Feed
 app.get('/api/feed', (req, res) => {
   const { category } = req.query;

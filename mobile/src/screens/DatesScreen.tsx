@@ -1038,6 +1038,7 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedGeoScope, setSelectedGeoScope] = useState<string>('ALL');
   const [selectedDomain, setSelectedDomain] = useState<InspirationDomain>('ALL_DOMAINS');
+  const [selectedIntent, setSelectedIntent] = useState<'ALL' | 'GIFT' | 'POT' | 'TOAST' | 'EXPERIENCE'>('ALL');
 
   // Active year & month helpers
   const selectedYear = anchorDate.getFullYear();
@@ -1111,6 +1112,9 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({
     if (selectedGeoScope !== 'ALL' && item.scope !== selectedGeoScope) {
       return false;
     }
+    if (selectedIntent !== 'ALL' && item.commercialIntent !== selectedIntent) {
+      return false;
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       const matchTitle = item.title.toLowerCase().includes(q);
@@ -1124,7 +1128,7 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({
     return true;
   });
 
-  const hasActiveFilters = selectedCategory !== 'ALL' || selectedGeoScope !== 'ALL' || selectedDomain !== 'ALL_DOMAINS' || searchQuery.trim().length > 0;
+  const hasActiveFilters = selectedCategory !== 'ALL' || selectedGeoScope !== 'ALL' || selectedDomain !== 'ALL_DOMAINS' || selectedIntent !== 'ALL' || searchQuery.trim().length > 0;
 
   // Group filtered items by month
   const itemsByMonth = useMemo(() => {
@@ -1394,7 +1398,7 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({
               </TouchableOpacity>
             </View>
 
-            {/* Pillar 1: Celebration Type with signature UX color mapping */}
+            {/* Pillar 1: Celebration Type (Enhanced Life-Cycle Schema) */}
             <Text style={[styles.filterSectionTitle, { color: colors.muted, marginBottom: 6 }]}>
               Celebration Type:
             </Text>
@@ -1402,7 +1406,7 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({
               {[
                 { id: 'ALL', label: 'All Joy', iconName: 'sparkles', color: '#7C3AED', softBg: '#F5F3FF' },
                 { id: 'BIRTHDAY', label: 'People & Birthdays', iconName: 'gift', color: '#2563EB', softBg: '#EFF6FF' },
-                { id: 'BEGINNING', label: 'Beginnings & Startups', iconName: 'briefcase', color: '#10B981', softBg: '#ECFDF5' },
+                { id: 'BEGINNING', label: 'Beginnings & Chapters', iconName: 'briefcase', color: '#10B981', softBg: '#ECFDF5' },
                 { id: 'MILESTONE', label: 'Milestones & Triumphs', iconName: 'award', color: '#F59E0B', softBg: '#FFFBEB' },
                 { id: 'ANNIVERSARY', label: 'Anniversaries & Weddings', iconName: 'heart', color: '#E11D48', softBg: '#FFF1F2' },
                 { id: 'COMMUNITY', label: 'Community Heroes & Idols', iconName: 'globe', color: '#7C3AED', softBg: '#F5F3FF' },
@@ -1440,9 +1444,9 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({
               })}
             </View>
 
-            {/* Pillar 2: Inspiration Field / Domain */}
+            {/* Pillar 2: Inspiration Field / Domain & Philosophy */}
             <Text style={[styles.filterSectionTitle, { color: colors.muted, marginTop: 10, marginBottom: 6 }]}>
-              Inspiration Field:
+              Inspiration Field & Philosophy:
             </Text>
             <View style={styles.filterChipGrid}>
               {[
@@ -1522,6 +1526,49 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({
               })}
             </View>
 
+            {/* Pillar 4: Action & Commercial Intent (High-Profit Engine) */}
+            <Text style={[styles.filterSectionTitle, { color: colors.muted, marginTop: 10, marginBottom: 6 }]}>
+              Action & Commercial Intent:
+            </Text>
+            <View style={styles.filterChipGrid}>
+              {[
+                { id: 'ALL', label: 'All Actions', iconName: 'sparkles', color: '#7C3AED', softBg: '#F5F3FF' },
+                { id: 'GIFT', label: 'Gift & Deliveries', iconName: 'shopping-bag', color: '#E11D48', softBg: '#FFF1F2' },
+                { id: 'POT', label: 'Crowd-Pot & War Room', iconName: 'dollar-sign', color: '#059669', softBg: '#ECFDF5' },
+                { id: 'TOAST', label: 'Universal Social Toast', iconName: 'activity', color: '#D97706', softBg: '#FFFBEB' },
+                { id: 'EXPERIENCE', label: 'Experience & Dining', iconName: 'compass', color: '#2563EB', softBg: '#EFF6FF' }
+              ].map(act => {
+                const isSelected = selectedIntent === act.id;
+                return (
+                  <TouchableOpacity
+                    key={act.id}
+                    style={[
+                      styles.filterModalChip,
+                      {
+                        backgroundColor: isSelected ? act.color : act.softBg,
+                        borderColor: isSelected ? act.color : `${act.color}40`
+                      }
+                    ]}
+                    onPress={() => setSelectedIntent(act.id as any)}
+                  >
+                    <Feather 
+                      name={act.iconName === 'sparkles' ? 'star' : (act.iconName as any)} 
+                      size={11} 
+                      color={isSelected ? '#FFF' : act.color} 
+                    />
+                    <Text
+                      style={[
+                        styles.filterModalChipText,
+                        { color: isSelected ? '#FFF' : act.color, fontWeight: isSelected ? '800' : '600' }
+                      ]}
+                    >
+                      {act.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
             {/* Dropdown Action Buttons */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.line }}>
               <TouchableOpacity
@@ -1529,6 +1576,7 @@ export const DatesScreen: React.FC<DatesScreenProps> = ({
                   setSelectedCategory('ALL');
                   setSelectedGeoScope('ALL');
                   setSelectedDomain('ALL_DOMAINS');
+                  setSelectedIntent('ALL');
                 }}
                 style={{ paddingVertical: 6, paddingHorizontal: 12 }}
               >

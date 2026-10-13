@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   Calendar as CalendarIcon,
   Search,
@@ -30,7 +30,9 @@ import {
   Music,
   Filter,
   Flame,
-  BookOpen
+  BookOpen,
+  ShoppingBag,
+  DollarSign
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { 
@@ -38,7 +40,8 @@ import type {
   PersonCircleMember, 
   GlobalCalendarEntry, 
   ManagedObjectType,
-  InspirationDomain
+  InspirationDomain,
+  CommercialIntent
 } from '../../../shared/types';
 import { 
   mockCalendarEntries, 
@@ -257,7 +260,20 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedGeoScope, setSelectedGeoScope] = useState<string>('ALL');
   const [selectedDomain, setSelectedDomain] = useState<InspirationDomain>('ALL_DOMAINS');
-  const [openFilterMenu, setOpenFilterMenu] = useState<'type' | 'field' | 'scope' | null>(null);
+  const [selectedIntent, setSelectedIntent] = useState<'ALL' | CommercialIntent>('ALL');
+  const [openFilterMenu, setOpenFilterMenu] = useState<'type' | 'field' | 'scope' | 'intent' | null>(null);
+  const filterBarRef = useRef<HTMLDivElement>(null);
+
+  // Close filter dropdowns when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (filterBarRef.current && !filterBarRef.current.contains(e.target as Node)) {
+        setOpenFilterMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   // Interactive Month Modal (Screenshot 2: Clicking month opens list of birthdays in that month)
   const [activeMonthModal, setActiveMonthModal] = useState<number | null>(null);
@@ -323,9 +339,14 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
         if (entry.geoScope !== selectedGeoScope) return false;
       }
 
+      // Action & Commercial Intent filter
+      if (selectedIntent !== 'ALL') {
+        if (entry.commercialIntent !== selectedIntent) return false;
+      }
+
       return true;
     });
-  }, [calendarEntries, searchQuery, selectedCategory, selectedGeoScope, selectedDomain]);
+  }, [calendarEntries, searchQuery, selectedCategory, selectedGeoScope, selectedDomain, selectedIntent]);
 
   // Group entries by month for the 12-Month Grid
   const entriesByMonth = useMemo(() => {
@@ -773,57 +794,173 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
         {/* ORGANIZED CATEGORY FILTER DROPDOWNS (NOT A MODAL) */}
         {(() => {
           const typeOptions = [
-            { id: 'ALL', label: 'All Joy', icon: <Sparkles size={13} />, color: '#7C3AED', softBg: '#F5F3FF', border: '#DDD6FE' },
-            { id: 'BIRTHDAY', label: 'People & Birthdays', icon: <Gift size={13} />, color: '#2563EB', softBg: '#EFF6FF', border: '#BFDBFE' },
-            { id: 'BEGINNING', label: 'Beginnings & Startups', icon: <Building2 size={13} />, color: '#10B981', softBg: '#ECFDF5', border: '#A7F3D0' },
-            { id: 'MILESTONE', label: 'Milestones & Triumphs', icon: <Award size={13} />, color: '#F59E0B', softBg: '#FFFBEB', border: '#FDE68A' },
-            { id: 'ANNIVERSARY', label: 'Anniversaries & Weddings', icon: <Heart size={13} />, color: '#E11D48', softBg: '#FFF1F2', border: '#FECDD3' },
-            { id: 'COMMUNITY_ICONS', label: 'Community Heroes & Idols', icon: <Globe size={13} />, color: '#7C3AED', softBg: '#F5F3FF', border: '#DDD6FE' },
-            { id: 'FAITH', label: 'Faith & Sacred Heritage', icon: <Sparkles size={13} />, color: '#6366F1', softBg: '#EEF2FF', border: '#C7D2FE' },
-            { id: 'TRIBUTE', label: 'Tributes & Remembrance', icon: <Flame size={13} />, color: '#475569', softBg: '#F8FAFC', border: '#CBD5E1' },
+            { 
+              id: 'ALL', 
+              label: 'All Joy', 
+              subtitle: 'Every celebration, landmark & life chapter',
+              icon: <Sparkles size={13} />, 
+              color: '#7C3AED', 
+              softBg: '#F5F3FF', 
+              border: '#DDD6FE' 
+            },
+            { 
+              id: 'BIRTHDAY', 
+              label: 'People & Birthdays', 
+              subtitle: 'Personal birthdays & civil identity',
+              icon: <Gift size={13} />, 
+              color: '#2563EB', 
+              softBg: '#EFF6FF', 
+              border: '#BFDBFE' 
+            },
+            { 
+              id: 'BEGINNING', 
+              label: 'Beginnings & Chapters', 
+              subtitle: 'Startups, Graduations, Housewarmings, New Ventures',
+              icon: <Building2 size={13} />, 
+              color: '#10B981', 
+              softBg: '#ECFDF5', 
+              border: '#A7F3D0' 
+            },
+            { 
+              id: 'MILESTONE', 
+              label: 'Milestones & Triumphs', 
+              subtitle: 'Recovery, Sobriety, Career, Health, Life Triumphs',
+              icon: <Award size={13} />, 
+              color: '#F59E0B', 
+              softBg: '#FFFBEB', 
+              border: '#FDE68A' 
+            },
+            { 
+              id: 'ANNIVERSARY', 
+              label: 'Anniversaries & Weddings', 
+              subtitle: 'Marriages, Golden Jubilees & Corporate Foundations',
+              icon: <Heart size={13} />, 
+              color: '#E11D48', 
+              softBg: '#FFF1F2', 
+              border: '#FECDD3' 
+            },
+            { 
+              id: 'COMMUNITY_ICONS', 
+              label: 'Community Heroes & Idols', 
+              subtitle: 'Mentors, Cultural Luminaries, Activists & Icons',
+              icon: <Globe size={13} />, 
+              color: '#7C3AED', 
+              softBg: '#F5F3FF', 
+              border: '#DDD6FE' 
+            },
+            { 
+              id: 'FAITH', 
+              label: 'Faith & Sacred Heritage', 
+              subtitle: 'Holy Days, Bar Mitzvahs, Baptisms, Ramadan, Easter, Diwali',
+              icon: <Sparkles size={13} />, 
+              color: '#6366F1', 
+              softBg: '#EEF2FF', 
+              border: '#C7D2FE' 
+            },
+            { 
+              id: 'TRIBUTE', 
+              label: 'Tributes & Remembrance', 
+              subtitle: 'In Memoriam, Legacy Tributes, Celebration of Life',
+              icon: <Flame size={13} />, 
+              color: '#475569', 
+              softBg: '#F8FAFC', 
+              border: '#CBD5E1' 
+            },
           ];
 
           const fieldOptions = [
-            { id: 'ALL_DOMAINS', label: 'All Fields', icon: <Sparkles size={13} />, color: '#6366F1' },
-            { id: 'TECH_BUSINESS', label: 'Tech & Business', icon: <Building2 size={13} />, color: '#3B82F6' },
-            { id: 'MUSIC_ARTS', label: 'Music & Arts', icon: <Music size={13} />, color: '#EC4899' },
-            { id: 'SPORTS_PIONEERS', label: 'Sports & Pioneers', icon: <Award size={13} />, color: '#F97316' },
-            { id: 'HUMANITARIAN_LEADERS', label: 'Humanitarians & Leaders', icon: <Heart size={13} />, color: '#8B5CF6' },
-            { id: 'SCIENCE_DISCOVERY', label: 'Science & Space', icon: <Compass size={13} />, color: '#06B6D4' },
-            { id: 'EARTH_NATURE', label: 'Earth & Wildlife', icon: <Globe size={13} />, color: '#10B981' },
-            { id: 'FAITH_PHILOSOPHY', label: 'Faith & Philosophy', icon: <BookOpen size={13} />, color: '#8B5CF6' },
+            { id: 'ALL_DOMAINS', label: 'All Fields', subtitle: 'Cross-domain human spirit & ingenuity', icon: <Sparkles size={13} />, color: '#6366F1', softBg: '#EEF2FF' },
+            { id: 'TECH_BUSINESS', label: 'Tech & Business', subtitle: 'Startups, AI, Fintech, Global Enterprise', icon: <Building2 size={13} />, color: '#3B82F6', softBg: '#EFF6FF' },
+            { id: 'MUSIC_ARTS', label: 'Music & Arts', subtitle: 'Jazz, Classical, Afrobeat, Design & Creative Arts', icon: <Music size={13} />, color: '#EC4899', softBg: '#FDF2F8' },
+            { id: 'SPORTS_PIONEERS', label: 'Sports & Pioneers', subtitle: 'Athletics, Champions, Expeditions, Record Breakers', icon: <Award size={13} />, color: '#F97316', softBg: '#FFF7ED' },
+            { id: 'HUMANITARIAN_LEADERS', label: 'Humanitarians & Leaders', subtitle: 'Civil Rights, Peace, Community Pillars & Mentors', icon: <Heart size={13} />, color: '#8B5CF6', softBg: '#F5F3FF' },
+            { id: 'SCIENCE_DISCOVERY', label: 'Science & Space', subtitle: 'Astronomy, Medicine, Physics & Discoveries', icon: <Compass size={13} />, color: '#06B6D4', softBg: '#ECFEFF' },
+            { id: 'EARTH_NATURE', label: 'Earth & Wildlife', subtitle: 'Ecology, Oceans, Conservation & Nature', icon: <Globe size={13} />, color: '#10B981', softBg: '#ECFDF5' },
+            { id: 'FAITH_PHILOSOPHY', label: 'Faith & Philosophy', subtitle: 'Sacred texts, saints, spiritual leaders & wisdom traditions', icon: <BookOpen size={13} />, color: '#6366F1', softBg: '#EEF2FF' },
           ];
 
           const scopeOptions = [
-            { id: 'ALL', label: 'All Scopes', icon: <Globe size={13} /> },
-            { id: 'CIRCLE', label: 'Family & Friends', icon: <Users size={13} /> },
-            { id: 'LOCAL', label: 'Local City', icon: <MapPin size={13} /> },
-            { id: 'COUNTRY', label: 'Country Level', icon: <Flag size={13} /> },
-            { id: 'CONTINENT', label: 'Pan-Continental', icon: <Compass size={13} /> },
-            { id: 'GLOBAL', label: 'Worldwide Observance', icon: <Globe size={13} /> },
+            { id: 'ALL', label: 'All Scopes', subtitle: 'Every sphere of celebration', icon: <Globe size={13} />, color: '#64748B', softBg: '#F8FAFC' },
+            { id: 'CIRCLE', label: 'Family & Friends', subtitle: 'Inner circle, private & intimate celebrations', icon: <Users size={13} />, color: '#E11D48', softBg: '#FFF1F2' },
+            { id: 'LOCAL', label: 'Local City', subtitle: 'Neighborhood & municipal pride', icon: <MapPin size={13} />, color: '#059669', softBg: '#ECFDF5' },
+            { id: 'COUNTRY', label: 'Country Level', subtitle: 'National heritage & statutory holidays', icon: <Flag size={13} />, color: '#2563EB', softBg: '#EFF6FF' },
+            { id: 'CONTINENT', label: 'Pan-Continental', subtitle: 'Regional federations & diaspora movements', icon: <Compass size={13} />, color: '#D97706', softBg: '#FFFBEB' },
+            { id: 'GLOBAL', label: 'Worldwide Observance', subtitle: 'Universal UN, UNESCO & global celebrations', icon: <Globe size={13} />, color: '#7C3AED', softBg: '#F5F3FF' },
+          ];
+
+          const intentOptions = [
+            { 
+              id: 'ALL', 
+              label: 'All Drivers', 
+              subtitle: 'All commercial & engagement drivers', 
+              icon: <Sparkles size={13} />, 
+              color: '#7C3AED', 
+              softBg: '#F5F3FF', 
+              border: '#DDD6FE' 
+            },
+            { 
+              id: 'GIFT', 
+              label: 'Gift & Delivery Driver', 
+              subtitle: 'High Margin: Florals, bespoke cakes, artisan gift boxes', 
+              icon: <ShoppingBag size={13} />, 
+              color: '#E11D48', 
+              softBg: '#FFF1F2', 
+              border: '#FECDD3' 
+            },
+            { 
+              id: 'POT', 
+              label: 'Crowd-Pot & War Room', 
+              subtitle: 'Fintech Rake (2-3%): Stealth crowdfunding, group money pots', 
+              icon: <DollarSign size={13} />, 
+              color: '#059669', 
+              softBg: '#ECFDF5', 
+              border: '#A7F3D0' 
+            },
+            { 
+              id: 'TOAST', 
+              label: 'Universal Social Toast', 
+              subtitle: 'Viral Retention: Tap-to-cheer, reels, corporate sponsorships', 
+              icon: <Flame size={13} />, 
+              color: '#D97706', 
+              softBg: '#FFFBEB', 
+              border: '#FDE68A' 
+            },
+            { 
+              id: 'EXPERIENCE', 
+              label: 'Experience & Dining', 
+              subtitle: 'Affiliate Fee: Table bookings, concerts, private dining', 
+              icon: <Compass size={13} />, 
+              color: '#2563EB', 
+              softBg: '#EFF6FF', 
+              border: '#BFDBFE' 
+            },
           ];
 
           const activeType = typeOptions.find(o => o.id === selectedCategory) || typeOptions[0];
           const activeField = fieldOptions.find(o => o.id === selectedDomain) || fieldOptions[0];
           const activeScope = scopeOptions.find(o => o.id === selectedGeoScope) || scopeOptions[0];
-          const hasActiveFilters = selectedCategory !== 'ALL' || selectedDomain !== 'ALL_DOMAINS' || selectedGeoScope !== 'ALL';
+          const activeIntent = intentOptions.find(o => o.id === selectedIntent) || intentOptions[0];
+          const hasActiveFilters = selectedCategory !== 'ALL' || selectedDomain !== 'ALL_DOMAINS' || selectedGeoScope !== 'ALL' || selectedIntent !== 'ALL';
 
           return (
-            <div style={{
-              backgroundColor: 'var(--card)',
-              borderRadius: '16px',
-              border: '1px solid var(--line)',
-              padding: '10px 16px',
-              marginBottom: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px',
-              boxShadow: 'var(--shadow-sm)',
-              position: 'relative',
-              zIndex: 60
-            }}>
+            <div 
+              ref={filterBarRef}
+              style={{
+                backgroundColor: 'var(--card)',
+                borderRadius: '16px',
+                border: '1px solid var(--line)',
+                padding: '10px 16px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+                boxShadow: 'var(--shadow-sm)',
+                position: 'relative',
+                zIndex: 60
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '4px' }}>
                   <Filter size={15} color="var(--purple)" />
@@ -864,18 +1001,19 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                       top: '118%',
                       left: 0,
                       backgroundColor: 'var(--card)',
-                      borderRadius: '14px',
+                      borderRadius: '16px',
                       border: '1px solid var(--line)',
-                      padding: '6px',
-                      minWidth: '250px',
+                      padding: '8px',
+                      minWidth: '320px',
+                      maxWidth: '380px',
                       zIndex: 100,
                       boxShadow: 'var(--shadow-lg)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '3px'
+                      gap: '4px'
                     }}>
                       <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--muted)', padding: '6px 10px', letterSpacing: '0.05em' }}>
-                        CELEBRATION TYPE
+                        CELEBRATION TYPE (LIFE-CYCLE SCHEMA)
                       </div>
                       {typeOptions.map(opt => {
                         const isSelected = selectedCategory === opt.id;
@@ -888,14 +1026,12 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                             }}
                             style={{
                               display: 'flex',
-                              alignItems: 'center',
+                              alignItems: 'flex-start',
                               gap: '10px',
                               padding: '8px 12px',
-                              borderRadius: '8px',
+                              borderRadius: '10px',
                               backgroundColor: isSelected ? opt.softBg : 'transparent',
                               color: isSelected ? opt.color : 'var(--fg)',
-                              fontWeight: isSelected ? 800 : 500,
-                              fontSize: '13px',
                               cursor: 'pointer',
                               textAlign: 'left',
                               width: '100%',
@@ -903,9 +1039,18 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                               transition: 'all 0.12s ease'
                             }}
                           >
-                            <span style={{ color: opt.color }}>{opt.icon}</span>
-                            <span style={{ flex: 1 }}>{opt.label}</span>
-                            {isSelected && <Check size={14} style={{ color: opt.color }} />}
+                            <span style={{ color: opt.color, marginTop: '2px' }}>{opt.icon}</span>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: isSelected ? 800 : 700, color: isSelected ? opt.color : 'var(--fg)' }}>
+                                {opt.label}
+                              </span>
+                              {opt.subtitle && (
+                                <span style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.3' }}>
+                                  {opt.subtitle}
+                                </span>
+                              )}
+                            </div>
+                            {isSelected && <Check size={14} style={{ color: opt.color, marginTop: '3px' }} />}
                           </button>
                         );
                       })}
@@ -926,9 +1071,9 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                       fontSize: '12.5px',
                       fontWeight: selectedDomain !== 'ALL_DOMAINS' ? 800 : 600,
                       border: '1px solid',
-                      borderColor: selectedDomain !== 'ALL_DOMAINS' ? 'var(--purple)' : 'var(--line)',
-                      backgroundColor: selectedDomain !== 'ALL_DOMAINS' ? 'var(--purple-soft)' : 'var(--bg)',
-                      color: selectedDomain !== 'ALL_DOMAINS' ? 'var(--purple)' : 'var(--fg)',
+                      borderColor: selectedDomain !== 'ALL_DOMAINS' ? activeField.color : 'var(--line)',
+                      backgroundColor: selectedDomain !== 'ALL_DOMAINS' ? activeField.softBg : 'var(--bg)',
+                      color: selectedDomain !== 'ALL_DOMAINS' ? activeField.color : 'var(--fg)',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
                     }}
@@ -945,18 +1090,19 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                       top: '118%',
                       left: 0,
                       backgroundColor: 'var(--card)',
-                      borderRadius: '14px',
+                      borderRadius: '16px',
                       border: '1px solid var(--line)',
-                      padding: '6px',
-                      minWidth: '240px',
+                      padding: '8px',
+                      minWidth: '320px',
+                      maxWidth: '380px',
                       zIndex: 100,
                       boxShadow: 'var(--shadow-lg)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '3px'
+                      gap: '4px'
                     }}>
                       <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--muted)', padding: '6px 10px', letterSpacing: '0.05em' }}>
-                        INSPIRATION FIELD
+                        INSPIRATION FIELD & PHILOSOPHY
                       </div>
                       {fieldOptions.map(opt => {
                         const isSelected = selectedDomain === opt.id;
@@ -969,24 +1115,31 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                             }}
                             style={{
                               display: 'flex',
-                              alignItems: 'center',
+                              alignItems: 'flex-start',
                               gap: '10px',
                               padding: '8px 12px',
-                              borderRadius: '8px',
-                              backgroundColor: isSelected ? 'var(--purple-soft)' : 'transparent',
-                              color: isSelected ? 'var(--purple)' : 'var(--fg)',
-                              fontWeight: isSelected ? 800 : 500,
-                              fontSize: '13px',
+                              borderRadius: '10px',
+                              backgroundColor: isSelected ? opt.softBg : 'transparent',
+                              color: isSelected ? opt.color : 'var(--fg)',
                               cursor: 'pointer',
                               textAlign: 'left',
                               width: '100%',
-                              border: isSelected ? '1px solid var(--purple)' : '1px solid transparent',
+                              border: isSelected ? `1px solid ${opt.color}` : '1px solid transparent',
                               transition: 'all 0.12s ease'
                             }}
                           >
-                            <span style={{ color: opt.color }}>{opt.icon}</span>
-                            <span style={{ flex: 1 }}>{opt.label}</span>
-                            {isSelected && <Check size={14} style={{ color: 'var(--purple)' }} />}
+                            <span style={{ color: opt.color, marginTop: '2px' }}>{opt.icon}</span>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: isSelected ? 800 : 700, color: isSelected ? opt.color : 'var(--fg)' }}>
+                                {opt.label}
+                              </span>
+                              {opt.subtitle && (
+                                <span style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.3' }}>
+                                  {opt.subtitle}
+                                </span>
+                              )}
+                            </div>
+                            {isSelected && <Check size={14} style={{ color: opt.color, marginTop: '3px' }} />}
                           </button>
                         );
                       })}
@@ -1007,9 +1160,9 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                       fontSize: '12.5px',
                       fontWeight: selectedGeoScope !== 'ALL' ? 800 : 600,
                       border: '1px solid',
-                      borderColor: selectedGeoScope !== 'ALL' ? 'var(--coral)' : 'var(--line)',
-                      backgroundColor: selectedGeoScope !== 'ALL' ? 'var(--coral-soft)' : 'var(--bg)',
-                      color: selectedGeoScope !== 'ALL' ? 'var(--coral)' : 'var(--fg)',
+                      borderColor: selectedGeoScope !== 'ALL' ? activeScope.color : 'var(--line)',
+                      backgroundColor: selectedGeoScope !== 'ALL' ? activeScope.softBg : 'var(--bg)',
+                      color: selectedGeoScope !== 'ALL' ? activeScope.color : 'var(--fg)',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
                     }}
@@ -1026,18 +1179,19 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                       top: '118%',
                       left: 0,
                       backgroundColor: 'var(--card)',
-                      borderRadius: '14px',
+                      borderRadius: '16px',
                       border: '1px solid var(--line)',
-                      padding: '6px',
-                      minWidth: '240px',
+                      padding: '8px',
+                      minWidth: '300px',
+                      maxWidth: '360px',
                       zIndex: 100,
                       boxShadow: 'var(--shadow-lg)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '3px'
+                      gap: '4px'
                     }}>
                       <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--muted)', padding: '6px 10px', letterSpacing: '0.05em' }}>
-                        SCOPE & CIRCLE
+                        SCOPE & CIRCLE (GEOGRAPHIC)
                       </div>
                       {scopeOptions.map(opt => {
                         const isSelected = selectedGeoScope === opt.id;
@@ -1050,24 +1204,120 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                             }}
                             style={{
                               display: 'flex',
-                              alignItems: 'center',
+                              alignItems: 'flex-start',
                               gap: '10px',
                               padding: '8px 12px',
-                              borderRadius: '8px',
-                              backgroundColor: isSelected ? 'var(--coral-soft)' : 'transparent',
-                              color: isSelected ? 'var(--coral)' : 'var(--fg)',
-                              fontWeight: isSelected ? 800 : 500,
-                              fontSize: '13px',
+                              borderRadius: '10px',
+                              backgroundColor: isSelected ? opt.softBg : 'transparent',
+                              color: isSelected ? opt.color : 'var(--fg)',
                               cursor: 'pointer',
                               textAlign: 'left',
                               width: '100%',
-                              border: isSelected ? '1px solid var(--coral)' : '1px solid transparent',
+                              border: isSelected ? `1px solid ${opt.color}` : '1px solid transparent',
                               transition: 'all 0.12s ease'
                             }}
                           >
-                            <span style={{ color: 'var(--coral)' }}>{opt.icon}</span>
-                            <span style={{ flex: 1 }}>{opt.label}</span>
-                            {isSelected && <Check size={14} style={{ color: 'var(--coral)' }} />}
+                            <span style={{ color: opt.color, marginTop: '2px' }}>{opt.icon}</span>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: isSelected ? 800 : 700, color: isSelected ? opt.color : 'var(--fg)' }}>
+                                {opt.label}
+                              </span>
+                              {opt.subtitle && (
+                                <span style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.3' }}>
+                                  {opt.subtitle}
+                                </span>
+                              )}
+                            </div>
+                            {isSelected && <Check size={14} style={{ color: opt.color, marginTop: '3px' }} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Dropdown 4: Action & Commercial Intent (High-Profit Engine) */}
+                <div style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setOpenFilterMenu(prev => prev === 'intent' ? null : 'intent')}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '7px 14px',
+                      borderRadius: '999px',
+                      fontSize: '12.5px',
+                      fontWeight: selectedIntent !== 'ALL' ? 800 : 600,
+                      border: '1px solid',
+                      borderColor: selectedIntent !== 'ALL' ? activeIntent.color : 'var(--line)',
+                      backgroundColor: selectedIntent !== 'ALL' ? activeIntent.softBg : 'var(--bg)',
+                      color: selectedIntent !== 'ALL' ? activeIntent.color : 'var(--fg)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {activeIntent.icon}
+                    <span>Action: <b>{activeIntent.label}</b></span>
+                    <ChevronDown size={13} style={{ transform: openFilterMenu === 'intent' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </button>
+
+                  {/* Inline Action & Commercial Intent Menu */}
+                  {openFilterMenu === 'intent' && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '118%',
+                      left: 0,
+                      backgroundColor: 'var(--card)',
+                      borderRadius: '16px',
+                      border: '1px solid var(--line)',
+                      padding: '8px',
+                      minWidth: '330px',
+                      maxWidth: '390px',
+                      zIndex: 100,
+                      boxShadow: 'var(--shadow-lg)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}>
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--muted)', padding: '6px 10px', letterSpacing: '0.05em' }}>
+                        ACTION & COMMERCIAL INTENT (HIGH PROFIT)
+                      </div>
+                      {intentOptions.map(opt => {
+                        const isSelected = selectedIntent === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            onClick={() => {
+                              setSelectedIntent(opt.id as any);
+                              setOpenFilterMenu(null);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '10px',
+                              padding: '8px 12px',
+                              borderRadius: '10px',
+                              backgroundColor: isSelected ? opt.softBg : 'transparent',
+                              color: isSelected ? opt.color : 'var(--fg)',
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                              width: '100%',
+                              border: isSelected ? `1px solid ${opt.border}` : '1px solid transparent',
+                              transition: 'all 0.12s ease'
+                            }}
+                          >
+                            <span style={{ color: opt.color, marginTop: '2px' }}>{opt.icon}</span>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: isSelected ? 800 : 700, color: isSelected ? opt.color : 'var(--fg)' }}>
+                                {opt.label}
+                              </span>
+                              {opt.subtitle && (
+                                <span style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.3' }}>
+                                  {opt.subtitle}
+                                </span>
+                              )}
+                            </div>
+                            {isSelected && <Check size={14} style={{ color: opt.color, marginTop: '3px' }} />}
                           </button>
                         );
                       })}
@@ -1083,6 +1333,7 @@ export const HBDaysView: React.FC<HBDaysViewProps> = ({
                     setSelectedCategory('ALL');
                     setSelectedDomain('ALL_DOMAINS');
                     setSelectedGeoScope('ALL');
+                    setSelectedIntent('ALL');
                     setOpenFilterMenu(null);
                   }}
                   style={{
