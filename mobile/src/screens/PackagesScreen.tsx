@@ -5,10 +5,12 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  SafeAreaView, 
   Image, 
-  Alert 
+  Alert,
+  Platform,
+  StatusBar
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
 import { ScreenLayout } from '../components/ScreenLayout';
@@ -86,6 +88,8 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
   preselectedRecipient
 }) => {
   const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44);
   const [activeTab, setActiveTab] = useState<'GIFTS' | 'PACKAGES'>('GIFTS');
   const [selectedRecipient, setSelectedRecipient] = useState<string>(preselectedRecipient || 'All');
 
@@ -146,8 +150,11 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
   };
 
   return (
-    <ScreenLayout safeTop safeBottom={false}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView 
+        contentContainerStyle={[styles.scroll, { paddingTop: topInset + 10, paddingBottom: 120 }]} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Screen Header */}
         <View style={styles.header}>
           <View style={[styles.kickerPill, { backgroundColor: colors.purpleSoft }]}>
@@ -299,7 +306,7 @@ export const PackagesScreen: React.FC<PackagesScreenProps> = ({
           </View>
         )}
       </ScrollView>
-    </ScreenLayout>
+    </View>
   );
 };
 

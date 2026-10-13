@@ -20,12 +20,40 @@ interface StoredAccount {
 const ACCOUNT_KEY = 'hbd.account.v1';
 const SESSION_KEY = 'hbd.session.v1';
 
-function loadAccount(): StoredAccount | null {
+const DEFAULT_ACCOUNT: StoredAccount = {
+  profile: {
+    id: 'u-samuel',
+    handle: 'samuel_nd',
+    fullName: 'Samuel Ndamukong',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    city: 'London',
+    country: 'United Kingdom',
+    birthDay: 19,
+    birthMonth: 10,
+    isVerified: true,
+    bio: 'Celebrating moments with family across borders.',
+    preferences: {
+      interests: ['Acoustic Music', 'Gourmet Treats', 'Tech'],
+      giftWishes: ['Audio equipment', 'Bespoke cakes'],
+      avoid: [],
+      favoriteColor: '#5B2A86'
+    },
+    privacy: {
+      birthdayVisibility: 'EVERYONE',
+      showAge: false,
+      preferencesVisibleToFriends: true
+    }
+  },
+  friendships: initialFriendships,
+  following: ['u-sarah', 'u-aisha']
+};
+
+function loadAccount(): StoredAccount {
   try {
     const raw = localStorage.getItem(ACCOUNT_KEY);
-    return raw ? (JSON.parse(raw) as StoredAccount) : null;
+    return raw ? (JSON.parse(raw) as StoredAccount) : DEFAULT_ACCOUNT;
   } catch {
-    return null;
+    return DEFAULT_ACCOUNT;
   }
 }
 
@@ -61,9 +89,7 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const stored = useRef(loadAccount());
   const [account, setAccount] = useState<StoredAccount | null>(stored.current);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
-    () => !!stored.current && localStorage.getItem(SESSION_KEY) === 'in'
-  );
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | undefined>(undefined);
 

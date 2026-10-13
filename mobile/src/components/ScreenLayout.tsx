@@ -22,9 +22,9 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   children,
   style,
   contentStyle,
-  safeTop = true,
+  safeTop = false,
   safeBottom = false,
-  fullBleed = false,
+  fullBleed = true,
   backgroundColor,
 }) => {
   const insets = useSafeAreaInsets();
@@ -32,23 +32,15 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
 
   const bg = backgroundColor || colors.bg;
 
-  // On Android, StatusBar.currentHeight handles the notification bar if insets.top is 0
-  const topInset = fullBleed 
-    ? 0 
-    : Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 0);
+  const topInset = safeTop 
+    ? Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44) 
+    : 0;
 
   const bottomInset = safeBottom ? Math.max(insets.bottom, 12) : 0;
 
   return (
     <View style={[styles.container, { backgroundColor: bg }, style]}>
-      <View
-        style={[
-          styles.content,
-          safeTop && { paddingTop: topInset },
-          safeBottom && { paddingBottom: bottomInset },
-          contentStyle,
-        ]}
-      >
+      <View style={[styles.content, contentStyle]}>
         {children}
       </View>
     </View>

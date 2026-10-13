@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -9,44 +9,76 @@ import {
   TextInput, 
   Image, 
   Switch, 
-  Alert 
+  Alert,
+  Platform,
+  StatusBar
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../context/ThemeContext';
 import { ScreenLayout } from '../components/ScreenLayout';
+import { useAuth, DEMO_MOBILE_USERS } from '../context/AuthContext';
 
 interface ProfileScreenProps {
   onOpenPlanner: () => void;
   onNavigateToFriends?: () => void;
 }
 
+const MONTH_NAMES = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];
+
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ 
   onOpenPlanner,
   onNavigateToFriends
 }) => {
   const { colors, isDark, toggleTheme } = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44);
+  const bottomClearance = 85 + (insets.bottom > 0 ? insets.bottom : 8);
+  const { user, logout, openAuthModal, switchUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'PREFERENCES' | 'MEMORIES'>('PREFERENCES');
 
-  const [name, setName] = useState('Samuel Ndamukong');
-  const [handle, setHandle] = useState('samuel_nd');
-  const [bio, setBio] = useState('Product architect & celebration enthusiast. Always down for good coffee & heartfelt surprises ✨');
-  const [city, setCity] = useState('London, UK');
-  const [birthday, setBirthday] = useState('24 Oct 1995');
+  const [name, setName] = useState(user?.fullName || 'Samuel Ndamukong');
+  const [handle, setHandle] = useState(user?.handle || 'samuel_nd');
+  const [bio, setBio] = useState(user?.bio || 'Product architect & celebration enthusiast. Always down for good coffee & heartfelt surprises ✨');
+  const [city, setCity] = useState(user ? `${user.city}, ${user.country}` : 'London, UK');
+  const [birthday, setBirthday] = useState(user ? `${user.birthDay} ${MONTH_NAMES[user.birthMonth - 1]}` : '24 Oct 1995');
   const [daysUntil, setDaysUntil] = useState(16);
 
   // Wishlist & Avoidances
-  const [wishlist, setWishlist] = useState<string[]>([
+  const [wishlist, setWishlist] = useState<string[]>(user?.wishlist || [
     'Specialty Coffee Beans', 
     'Noise Cancelling Headphones', 
     'Kindle Travel Books', 
     'Minimalist Gold Watch'
   ]);
-  const [avoidList, setAvoidList] = useState<string[]>([
+  const [avoidList, setAvoidList] = useState<string[]>(user?.avoidList || [
     'Lilies (allergic)', 
     'Extreme Sweet Fondant'
   ]);
   const [newWish, setNewWish] = useState('');
   const [newAvoid, setNewAvoid] = useState('');
+
+  // Traditions & Memorial settings
+  const [traditions, setTraditions] = useState<string[]>(user?.traditions || ['Universal Secular', 'Christian Heritage']);
+  const [showTributes, setShowTributes] = useState<boolean>(user?.showTributes !== undefined ? user.showTributes : true);
+
+  // Keep synced with AuthContext user
+  useEffect(() => {
+    if (user) {
+      setName(user.fullName);
+      setHandle(user.handle);
+      if (user.bio) setBio(user.bio);
+      setCity(`${user.city}, ${user.country}`);
+      setBirthday(`${user.birthDay} ${MONTH_NAMES[user.birthMonth - 1]}`);
+      setWishlist(user.wishlist || []);
+      setAvoidList(user.avoidList || []);
+      setTraditions(user.traditions || ['Universal Secular']);
+      setShowTributes(user.showTributes !== undefined ? user.showTributes : true);
+    }
+  }, [user]);
 
   // Privacy toggles
   const [isFriendsOnly, setIsFriendsOnly] = useState(true);
@@ -107,16 +139,79 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     Alert.alert('Profile Saved', 'Your celebration preferences and birthday countdown have been updated.');
   };
 
+  // If user is logged out, leave the profile screen entirely to dedicated Passport Login Gate
+  if (!user) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.bg, paddingTop: topInset }]}>
+        <ScrollView 
+          contentContainerStyle={[styles.scroll, { paddingBottom: bottomClearance }]} 
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.guestCard, { backgroundColor: colors.card, borderColor: colors.line, marginTop: 20 }]}>
+            <View style={[styles.guestIconWrap, { backgroundColor: colors.purpleSoft }]}>
+              <Feather name="user-check" size={28} color={colors.purple} />
+            </View>
+            <Text style={[styles.guestTitle, { color: colors.fg }]}>Celebration Passport Required</Text>
+            <Text style={[styles.guestSub, { color: colors.muted }]}>
+              Sign in or create your verifiable celebration passport to manage your wishlist, birthday countdown, and celebratory circle.
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 10, width: '100%', marginTop: 8 }}>
+              <TouchableOpacity
+                style={[styles.guestLoginBtn, { backgroundColor: colors.purple }]}
+                onPress={() => openAuthModal('login')}
+              >
+                <Feather name="log-in" size={15} color="#FFF" />
+                <Text style={styles.guestLoginBtnText}>Sign In</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.guestSignUpBtn, { borderColor: colors.purple }]}
+                onPress={() => openAuthModal('signup')}
+              >
+                <Feather name="star" size={15} color={colors.purple} />
+                <Text style={[styles.guestSignUpBtnText, { color: colors.purple }]}>Register Passport</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* 1-Tap Quick Demo Switcher on Logged-Out Screen */}
+          <View style={{ marginTop: 24 }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10, textAlign: 'center' }}>
+              OR QUICK 1-TAP DEMO ACCESS
+            </Text>
+            <View style={{ gap: 8 }}>
+              {DEMO_MOBILE_USERS.map(demo => (
+                <TouchableOpacity
+                  key={demo.id}
+                  style={[styles.demoCard, { backgroundColor: colors.card, borderColor: colors.line }]}
+                  onPress={() => switchUser(demo)}
+                >
+                  <Image source={{ uri: demo.avatarUrl }} style={styles.demoAvatar} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.demoName, { color: colors.fg }]}>{demo.fullName}</Text>
+                    <Text style={[styles.demoHandle, { color: colors.muted }]}>@{demo.handle} · {demo.city}</Text>
+                  </View>
+                  <Feather name="arrow-right-circle" size={18} color={colors.purple} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
-    <ScreenLayout safeTop safeBottom={false}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        
+    <View style={[styles.container, { backgroundColor: colors.bg, paddingTop: topInset }]}>
+      <ScrollView 
+        contentContainerStyle={[styles.scroll, { paddingBottom: bottomClearance }]} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Header Card */}
         <View style={[styles.profileHeaderCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
           <View style={styles.avatarRow}>
             <View style={styles.avatarWrap}>
               <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' }} 
+                source={{ uri: user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' }} 
                 style={[styles.avatar, { borderColor: colors.gold }]} 
               />
               <TouchableOpacity style={[styles.cameraBtn, { backgroundColor: colors.purple }]}>
@@ -258,6 +353,59 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               </View>
             </View>
 
+            {/* Sacred Traditions & Memorial Settings */}
+            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
+              <View style={styles.sectionHeader}>
+                <View style={[styles.sectionIconWrap, { backgroundColor: '#EEF2FF' }]}>
+                  <Feather name="sun" size={14} color="#6366F1" />
+                </View>
+                <View>
+                  <Text style={[styles.sectionTitle, { color: colors.fg }]}>Sacred Traditions & Memorials</Text>
+                  <Text style={[styles.sectionSubtitle, { color: colors.muted }]}>Cultural, faith, and remembrance calendar settings.</Text>
+                </View>
+              </View>
+
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#6366F1', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                ACTIVE HERITAGE OBSERVANCES
+              </Text>
+              <View style={styles.tagWrap}>
+                {traditions.map((t, i) => (
+                  <View key={i} style={[styles.wishChip, { backgroundColor: '#EEF2FF' }]}>
+                    <Text style={[styles.wishChipText, { color: '#4338CA' }]}>{t}</Text>
+                    <TouchableOpacity onPress={() => setTraditions(prev => prev.filter(item => item !== t))}>
+                      <Feather name="x" size={12} color="#6366F1" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+
+              {/* Quick Add Presets */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                {['Islamic Heritage', 'Hindu Heritage', 'Jewish Heritage', 'East Asian Heritage'].filter(p => !traditions.includes(p)).map(preset => (
+                  <TouchableOpacity
+                    key={preset}
+                    style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: colors.line }}
+                    onPress={() => setTraditions(prev => [...prev, preset])}
+                  >
+                    <Text style={{ fontSize: 11, color: colors.muted }}>+ {preset}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Memorial Tributes Toggle */}
+              <View style={[styles.toggleRow, { borderBottomWidth: 0, paddingTop: 6 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: colors.fg }]}>Include Memorial & Life Tributes</Text>
+                  <Text style={[styles.toggleDesc, { color: colors.muted }]}>Display dignified In Memoriam anniversaries and remembrance days.</Text>
+                </View>
+                <Switch 
+                  value={showTributes} 
+                  onValueChange={setShowTributes} 
+                  trackColor={{ false: '#ccc', true: '#475569' }}
+                />
+              </View>
+            </View>
+
             {/* Privacy & Appearance Settings */}
             <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
               <Text style={[styles.sectionTitle, { color: colors.fg }]}>Appearance & Privacy</Text>
@@ -306,6 +454,64 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               <Feather name="check-circle" size={16} color="#FFFFFF" />
               <Text style={styles.saveBtnText}>Save Preferences</Text>
             </TouchableOpacity>
+
+            {/* Account Management & Verified Civil Status */}
+            {user && (
+              <View style={[styles.accountCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
+                <View style={styles.accountHeader}>
+                  <View style={[
+                    styles.civilBadge, 
+                    { 
+                      backgroundColor: user.isVerifiedCivil ? '#ECFDF5' : '#FFFBEB', 
+                      borderColor: user.isVerifiedCivil ? '#10B981' : '#F59E0B' 
+                    }
+                  ]}>
+                    <Feather name={user.isVerifiedCivil ? "shield" : "alert-circle"} size={13} color={user.isVerifiedCivil ? '#10B981' : '#F59E0B'} />
+                    <Text style={[styles.civilBadgeText, { color: user.isVerifiedCivil ? '#047857' : '#B45309' }]}>
+                      {user.isVerifiedCivil ? 'Official Civil Identity Verified' : 'Document Verification Pending'}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={[styles.accountSectionLabel, { color: colors.muted }]}>SWITCH CELEBRATION PROFILE</Text>
+                <View style={styles.switchUserRow}>
+                  {DEMO_MOBILE_USERS.map(demo => (
+                    <TouchableOpacity
+                      key={demo.id}
+                      style={[
+                        styles.switchUserChip,
+                        { borderColor: demo.id === user.id ? colors.purple : colors.line },
+                        demo.id === user.id && { backgroundColor: colors.purpleSoft }
+                      ]}
+                      onPress={() => switchUser(demo)}
+                    >
+                      <Image source={{ uri: demo.avatarUrl }} style={styles.switchUserAvatar} />
+                      <Text style={[styles.switchUserName, { color: demo.id === user.id ? colors.purple : colors.fg }]}>
+                        {demo.fullName.split(' ')[0]}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Log Out Button */}
+                <TouchableOpacity
+                  style={[styles.logoutBtn, { borderColor: '#F43F5E', backgroundColor: '#FFF1F2' }]}
+                  onPress={() => {
+                    Alert.alert(
+                      'Log Out of Passport',
+                      'Are you sure you want to log out of your celebration passport?',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Log Out', style: 'destructive', onPress: () => logout() }
+                      ]
+                    );
+                  }}
+                >
+                  <Feather name="log-out" size={16} color="#E11D48" />
+                  <Text style={styles.logoutBtnText}>Log Out of Passport</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </>
         ) : (
           /* My Memories Archive */
@@ -344,7 +550,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </View>
         )}
       </ScrollView>
-    </ScreenLayout>
+    </View>
   );
 };
 
@@ -637,5 +843,149 @@ const styles = StyleSheet.create({
   memoryReplayText: {
     fontSize: 12,
     fontFamily: 'Inter-Bold',
+  },
+  guestCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 18,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  guestIconWrap: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  guestTitle: {
+    fontSize: 17,
+    fontFamily: 'Poppins-Bold',
+    marginBottom: 4,
+  },
+  guestSub: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
+    lineHeight: 17,
+    marginBottom: 16,
+    paddingHorizontal: 10,
+  },
+  guestLoginBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 999,
+  },
+  guestLoginBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontFamily: 'Poppins-Bold',
+  },
+  guestSignUpBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  guestSignUpBtnText: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Bold',
+  },
+  accountCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 16,
+    marginTop: 14,
+  },
+  accountHeader: {
+    marginBottom: 14,
+  },
+  civilBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  civilBadgeText: {
+    fontSize: 11.5,
+    fontFamily: 'Inter-Bold',
+  },
+  accountSectionLabel: {
+    fontSize: 10,
+    fontFamily: 'Poppins-Bold',
+    letterSpacing: 0.6,
+    marginBottom: 8,
+  },
+  switchUserRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  switchUserChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  switchUserAvatar: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+  },
+  switchUserName: {
+    fontSize: 11.5,
+    fontFamily: 'Inter-Medium',
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  logoutBtnText: {
+    color: '#E11D48',
+    fontSize: 13,
+    fontFamily: 'Poppins-Bold',
+  },
+  demoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 12,
+  },
+  demoAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+  },
+  demoName: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Bold',
+  },
+  demoHandle: {
+    fontSize: 11,
+    fontFamily: 'Inter-Regular',
+    marginTop: 2,
   },
 });

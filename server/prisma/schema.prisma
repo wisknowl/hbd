@@ -18,6 +18,8 @@ enum CelebrationCategory {
   ANNIVERSARY
   ACHIEVEMENT
   COMMUNITY
+  FAITH
+  TRIBUTE
 }
 
 enum PackageTier {
@@ -55,6 +57,8 @@ model User {
   phoneNumber     String?
   birthDate       DateTime?
   isVerified      Boolean       @default(false)
+  traditions      String[]      @default([])
+  showTributes    Boolean       @default(true)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -203,3 +207,154 @@ model MemoryVaultItem {
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   celebration   Celebration? @relation(fields: [celebrationId], references: [id], onDelete: SetNull)
 }
+
+enum SurpriseStatus {
+  PLANNING
+  LOCKED
+  DELIVERED
+}
+
+enum SurpriseVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum ContributionType {
+  VIDEO
+  PHOTO
+  VOICE_NOTE
+  LETTER
+  MONEY
+  PHYSICAL_GIFT
+  DIGITAL_GIFT
+  SERVICE
+}
+
+model SurprisePackage {
+  id                  String             @id @default(uuid())
+  title               String
+  celebrantId         String
+  celebrantName       String
+  celebrantAvatar     String?
+  celebrantBirthDate  DateTime
+  organizerId         String
+  status              SurpriseStatus     @default(PLANNING)
+  visibility          SurpriseVisibility @default(PRIVATE)
+  targetDeliveryDate  DateTime
+  deliveredAt         DateTime?
+  hasPooledGoal       Boolean            @default(false)
+  pooledGoalAmount    Decimal?           @db.Decimal(10, 2)
+  currentPooledAmount Decimal            @default(0.00) @db.Decimal(10, 2)
+  currency            String             @default("USD")
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  contributions       SurpriseContribution[]
+  messages            SurpriseMessage[]
+
+  @@index([celebrantId])
+  @@index([organizerId])
+  @@index([status])
+}
+
+model SurpriseContribution {
+  id                      String           @id @default(uuid())
+  packageId               String
+  contributorId           String
+  contributorName         String
+  type                    ContributionType
+  mediaUrl                String?
+  thumbnailUrl            String?
+  messageText             String?          @db.Text
+  giftTitle               String?
+  giftDescription         String?          @db.Text
+  estimatedValue          Decimal?         @db.Decimal(10, 2)
+  amountContributed       Decimal?         @db.Decimal(10, 2)
+  currency                String?          @default("USD")
+  isFlaggedForCompilation Boolean          @default(false)
+  compilationOrder        Int?
+  submittedAt             DateTime         @default(now())
+
+  package                 SurprisePackage  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+}
+
+model SurpriseMessage {
+  id          String          @id @default(uuid())
+  packageId   String
+  senderId    String
+  senderName  String
+  text        String          @db.Text
+  mediaUrl    String?
+  createdAt   DateTime        @default(now())
+
+  package     SurprisePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+}
+
+enum InspirationDomain {
+  TECH_BUSINESS
+  MUSIC_ARTS
+  SPORTS_PIONEERS
+  HUMANITARIAN_LEADERS
+  SCIENCE_DISCOVERY
+  EARTH_NATURE
+  FAITH_PHILOSOPHY
+}
+
+enum CelebrationTone {
+  FESTIVE
+  TRIBUTE
+}
+
+enum CommercialIntent {
+  GIFT
+  POT
+  TOAST
+  EXPERIENCE
+}
+
+enum CalendarScope {
+  CIRCLE
+  LOCAL
+  COUNTRY
+  CONTINENT
+  GLOBAL
+}
+
+model CalendarEvent {
+  id                String             @id @default(uuid())
+  title             String
+  subtitle          String?
+  category          CelebrationCategory
+  domain            InspirationDomain?
+  tone              CelebrationTone    @default(FESTIVE)
+  commercialIntent  CommercialIntent   @default(TOAST)
+  countryCode       String?            @default("GLOBAL")
+  heritageTradition String?
+  defaultMonth      Int                // 1-12
+  defaultDay        Int                // 1-31
+  isFloatingLunar   Boolean            @default(false)
+  summary           String?            @db.Text
+  toastCount        Int                @default(0)
+  createdAt         DateTime           @default(now())
+
+  occurrences       EventOccurrence[]
+
+  @@index([category])
+  @@index([countryCode])
+  @@index([defaultMonth, defaultDay])
+}
+
+model EventOccurrence {
+  id             String        @id @default(uuid())
+  eventId        String
+  year           Int
+  month          Int           // 1-12
+  day            Int           // 1-31
+  exactDate      DateTime      @db.Date
+
+  event          CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, year])
+  @@index([year, month, day])
+}
+

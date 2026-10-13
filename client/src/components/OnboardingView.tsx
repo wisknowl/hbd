@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { useSession } from '../session';
-import { Sparkles, Calendar, Heart, Gift, ArrowRight, User, Plus, X, ShieldCheck, KeyRound } from 'lucide-react';
+import { 
+  Sparkles, 
+  Calendar, 
+  Heart, 
+  Gift, 
+  ArrowRight, 
+  User, 
+  Plus, 
+  X, 
+  ShieldCheck, 
+  KeyRound,
+  Music,
+  Star,
+  Compass,
+  Award
+} from 'lucide-react';
 import { mockPeople } from '../data/people';
 import { Avatar } from './Avatar';
 
@@ -10,6 +25,13 @@ interface OnboardingProps {
 
 const PRESET_INTERESTS = ['Books', 'Perfume', 'Jewelry', 'Tech', 'Gaming', 'Coffee', 'Skincare', 'Music', 'Plants', 'Fashion'];
 const PRESET_AVOIDS = ['Alcohol', 'Nuts', 'Gluten', 'Strong perfume', 'Lilies (allergic)'];
+
+const PRESET_MUSIC = ['Afrobeats', 'Jazz', 'Classical', 'R&B', 'Hip-Hop', 'Electronic', 'Indie', 'Soul'];
+const PRESET_ANIMALS = ['Dogs', 'Cats', 'Wildlife', 'Birds', 'Horses', 'Dolphins'];
+const PRESET_HOBBIES = ['Photography', 'Reading', 'Culinary & Baking', 'Tech & Coding', 'Athletics & Running', 'Travel', 'Art & Design', 'Gaming'];
+
+const PRESET_IDOLS = ['Nelson Mandela', 'Steve Jobs', 'Serena Williams', 'Maya Angelou', 'Miles Davis', 'Marie Curie', 'Wangari Maathai', 'Ada Lovelace'];
+const PRESET_GOALS = ['Launch Startup', 'Master a New Craft', 'Run a Marathon', 'Academic Degree', 'Release Creative Album', 'Wedding / Family Milestone'];
 
 export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
   const { login, logIn } = useSession();
@@ -25,6 +47,17 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
   const [birthMonth, setBirthMonth] = useState('10');
   const [interests, setInterests] = useState<string[]>(['Coffee', 'Books', 'Perfume']);
   const [dislikes, setDislikes] = useState<string[]>(['Lilies (allergic)']);
+
+  // Passions, Idols & Goals states (100% Skippable)
+  const [selectedMusic, setSelectedMusic] = useState<string[]>(['Afrobeats', 'Jazz']);
+  const [selectedAnimals, setSelectedAnimals] = useState<string[]>(['Dogs']);
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>(['Photography', 'Reading']);
+
+  const [selectedIdols, setSelectedIdols] = useState<string[]>(['Nelson Mandela']);
+  const [customIdol, setCustomIdol] = useState('');
+
+  const [selectedGoals, setSelectedGoals] = useState<string[]>(['Launch Startup']);
+  const [customGoal, setCustomGoal] = useState('');
   
   const [customInterest, setCustomInterest] = useState('');
   const [customDislike, setCustomDislike] = useState('');
@@ -55,6 +88,40 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
     }
   };
 
+  const toggleMusic = (genre: string) => {
+    setSelectedMusic(prev => prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]);
+  };
+
+  const toggleAnimal = (animal: string) => {
+    setSelectedAnimals(prev => prev.includes(animal) ? prev.filter(a => a !== animal) : [...prev, animal]);
+  };
+
+  const toggleHobby = (hobby: string) => {
+    setSelectedHobbies(prev => prev.includes(hobby) ? prev.filter(h => h !== hobby) : [...prev, hobby]);
+  };
+
+  const toggleIdol = (idol: string) => {
+    setSelectedIdols(prev => prev.includes(idol) ? prev.filter(i => i !== idol) : [...prev, idol]);
+  };
+
+  const addCustomIdol = () => {
+    if (customIdol.trim() && !selectedIdols.includes(customIdol.trim())) {
+      setSelectedIdols(prev => [...prev, customIdol.trim()]);
+      setCustomIdol('');
+    }
+  };
+
+  const toggleGoal = (goal: string) => {
+    setSelectedGoals(prev => prev.includes(goal) ? prev.filter(g => g !== goal) : [...prev, goal]);
+  };
+
+  const addCustomGoal = () => {
+    if (customGoal.trim() && !selectedGoals.includes(customGoal.trim())) {
+      setSelectedGoals(prev => [...prev, customGoal.trim()]);
+      setCustomGoal('');
+    }
+  };
+
   const handleSignUpComplete = () => {
     const id = 'u-' + (handle || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
     
@@ -74,6 +141,11 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
         giftWishes: [],
         avoid: dislikes,
         favoriteColor: '#5B2A86',
+        idols: selectedIdols,
+        musicGenres: selectedMusic,
+        animalTypes: selectedAnimals,
+        hobbies: selectedHobbies,
+        personalGoals: selectedGoals,
       },
       privacy: {
         birthdayVisibility: 'FRIENDS',
@@ -313,55 +385,70 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
         {mode === 'signup' && (
           <div>
             {/* Step Indicator */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '28px' }}>
-              {[1, 2, 3].map(i => (
-                <div
-                  key={i}
-                  style={{
-                    height: '5px',
-                    flex: 1,
-                    borderRadius: '999px',
-                    backgroundColor: i <= step ? 'var(--purple)' : 'var(--line)',
-                    transition: 'background-color 0.3s ease'
-                  }}
-                />
-              ))}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div
+                    key={i}
+                    style={{
+                      height: '5px',
+                      flex: 1,
+                      borderRadius: '999px',
+                      backgroundColor: i <= step ? 'var(--purple)' : 'var(--line)',
+                      transition: 'background-color 0.3s ease'
+                    }}
+                  />
+                ))}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)' }}>
+                  Step {step} of 6
+                </span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--purple)' }}>
+                  {step === 1 && 'Civil Identity'}
+                  {step === 2 && 'Celebration Date'}
+                  {step === 3 && 'Passions & Favorites'}
+                  {step === 4 && 'Idols & Role Models'}
+                  {step === 5 && 'Milestone Radar'}
+                  {step === 6 && 'Celebration Preferences'}
+                </span>
+              </div>
             </div>
 
-            {/* STEP 1: Basic Profile */}
+            {/* STEP 1: Official Civil Identity */}
             {step === 1 && (
               <div className="hbd-fade-up">
-                <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                   <div style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '18px',
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
                     background: 'linear-gradient(135deg, var(--purple), var(--coral))',
                     display: 'grid',
                     placeItems: 'center',
-                    margin: '0 auto 16px auto',
+                    margin: '0 auto 14px auto',
                     boxShadow: '0 8px 20px rgba(91, 42, 134, 0.25)'
                   }}>
-                    <Sparkles size={28} color="#fff" />
+                    <Sparkles size={26} color="#fff" />
                   </div>
-                  <h1 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '6px' }}>
+                  <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px' }}>
                     Welcome to HBD
                   </h1>
-                  <p style={{ color: 'var(--muted)', fontSize: '14px' }}>
-                    Create your celebration passport to connect with friends & loved ones.
+                  <p style={{ color: 'var(--muted)', fontSize: '13px', lineHeight: 1.5 }}>
+                    Create your authentic celebration passport to celebrate and be celebrated globally.
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '28px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
                   <div>
-                    <label className="hbd-label">YOUR FULL NAME</label>
+                    <label className="hbd-label">LEGAL / OFFICIAL FULL NAME</label>
                     <div style={{ position: 'relative' }}>
                       <User size={18} color="var(--muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                       <input
                         type="text"
                         className="hbd-input"
                         style={{ paddingLeft: '42px' }}
-                        placeholder="e.g. Sarah Johnson"
+                        placeholder="e.g. Sarah Chinwe Johnson"
                         value={name}
                         onChange={e => setName(e.target.value)}
                       />
@@ -369,14 +456,14 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
                   </div>
 
                   <div>
-                    <label className="hbd-label">CHOOSE YOUR HANDLE</label>
+                    <label className="hbd-label">UNIQUE CELEBRATION HANDLE</label>
                     <div style={{ position: 'relative' }}>
                       <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontWeight: 700, color: 'var(--purple)' }}>@</span>
                       <input
                         type="text"
                         className="hbd-input"
                         style={{ paddingLeft: '38px' }}
-                        placeholder="sarah.j"
+                        placeholder="sarah.johnson"
                         value={handle}
                         onChange={e => setHandle(e.target.value)}
                       />
@@ -395,15 +482,31 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
                       />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <label className="hbd-label">COUNTRY</label>
+                      <label className="hbd-label">COUNTRY OF CITIZENSHIP</label>
                       <input
                         type="text"
                         className="hbd-input"
-                        placeholder="UK"
+                        placeholder="United Kingdom"
                         value={country}
                         onChange={e => setCountry(e.target.value)}
                       />
                     </div>
+                  </div>
+                </div>
+
+                <div style={{
+                  backgroundColor: 'var(--purple-soft)',
+                  borderRadius: '14px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  marginBottom: '24px',
+                  border: '1px solid rgba(91, 42, 134, 0.12)'
+                }}>
+                  <ShieldCheck size={18} color="var(--purple)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ fontSize: '11.5px', lineHeight: 1.45, color: 'var(--fg)' }}>
+                    <strong>Official Civil Integrity:</strong> HBD uses real names so no celebrant is ever duplicated or celebrated twice. Official document verification is streamlined and ensures trust across the network.
                   </div>
                 </div>
 
@@ -421,24 +524,24 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
             {/* STEP 2: Birthday */}
             {step === 2 && (
               <div className="hbd-fade-up">
-                <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                   <div style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '18px',
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
                     background: 'var(--purple-soft)',
                     display: 'grid',
                     placeItems: 'center',
-                    margin: '0 auto 16px auto',
+                    margin: '0 auto 14px auto',
                     border: '1px solid rgba(91, 42, 134, 0.2)'
                   }}>
-                    <Calendar size={28} color="var(--purple)" />
+                    <Calendar size={26} color="var(--purple)" />
                   </div>
-                  <h1 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '6px' }}>
+                  <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px' }}>
                     When do we celebrate you?
                   </h1>
-                  <p style={{ color: 'var(--muted)', fontSize: '14px' }}>
-                    Your special day is the heart of HBD. We'll make sure you're loved.
+                  <p style={{ color: 'var(--muted)', fontSize: '13px' }}>
+                    Your primary date of celebration anchors your global toast calendar.
                   </p>
                 </div>
 
@@ -473,17 +576,17 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
 
                 <div style={{
                   backgroundColor: 'var(--purple-soft)',
-                  borderRadius: '16px',
-                  padding: '16px',
+                  borderRadius: '14px',
+                  padding: '12px 14px',
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: '12px',
-                  marginBottom: '28px',
-                  border: '1px solid rgba(91, 42, 134, 0.15)'
+                  gap: '10px',
+                  marginBottom: '24px',
+                  border: '1px solid rgba(91, 42, 134, 0.12)'
                 }}>
-                  <ShieldCheck size={20} color="var(--purple)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div style={{ fontSize: '12px', lineHeight: 1.5, color: 'var(--fg)' }}>
-                    <strong>Privacy Guaranteed:</strong> Your exact year is optional and your delivery address is never exposed publicly. Friends only receive gift-routing options.
+                  <ShieldCheck size={18} color="var(--purple)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ fontSize: '11.5px', lineHeight: 1.45, color: 'var(--fg)' }}>
+                    <strong>Privacy by Design:</strong> Your birth year is confidential. Your address remains private; friends and well-wishers only access secure gift-routing options.
                   </div>
                 </div>
 
@@ -491,7 +594,7 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
                   <button
                     onClick={() => setStep(1)}
                     className="hbd-btn hbd-btn-ghost"
-                    style={{ padding: '14px 24px' }}
+                    style={{ padding: '14px 22px' }}
                   >
                     Back
                   </button>
@@ -501,40 +604,369 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
                     className="hbd-btn hbd-btn-primary"
                     style={{ flex: 1, padding: '14px' }}
                   >
-                    Preferences <ArrowRight size={18} />
+                    Next: Passions & Favorites <ArrowRight size={18} />
                   </button>
                 </div>
               </div>
             )}
 
-            {/* STEP 3: Celebration Wishes & Avoids */}
+            {/* STEP 3: Passions & Favorites (Music, Wildlife/Animals, Hobbies) - SKIPPABLE */}
             {step === 3 && (
               <div className="hbd-fade-up">
-                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                   <div style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '18px',
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #10B981, #059669)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    margin: '0 auto 12px auto',
+                    boxShadow: '0 8px 20px rgba(16, 185, 129, 0.25)'
+                  }}>
+                    <Music size={26} color="#fff" />
+                  </div>
+                  <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px' }}>
+                    What fuels your everyday joy?
+                  </h1>
+                  <p style={{ color: 'var(--muted)', fontSize: '13px' }}>
+                    Helps tailor your 1-Day View inspiration radar. (Optional & skippable)
+                  </p>
+                </div>
+
+                {/* Music Genres */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label className="hbd-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--purple)', marginBottom: '8px' }}>
+                    <Music size={13} /> MUSIC GENRES
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {PRESET_MUSIC.map(genre => {
+                      const active = selectedMusic.includes(genre);
+                      return (
+                        <button
+                          key={genre}
+                          type="button"
+                          onClick={() => toggleMusic(genre)}
+                          className={`hbd-chip ${active ? 'is-on' : ''}`}
+                        >
+                          {active ? '✓ ' : '+ '}{genre}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Animals / Pets */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label className="hbd-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--coral)', marginBottom: '8px' }}>
+                    <Heart size={13} /> FAVORITE ANIMALS & WILDLIFE
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {PRESET_ANIMALS.map(animal => {
+                      const active = selectedAnimals.includes(animal);
+                      return (
+                        <button
+                          key={animal}
+                          type="button"
+                          onClick={() => toggleAnimal(animal)}
+                          className={`hbd-chip ${active ? 'is-on' : ''}`}
+                        >
+                          {active ? '✓ ' : '+ '}{animal}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Hobbies & Craft */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label className="hbd-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--purple)', marginBottom: '8px' }}>
+                    <Compass size={13} /> HOBBIES & CREATIVE PURSUITS
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {PRESET_HOBBIES.map(hobby => {
+                      const active = selectedHobbies.includes(hobby);
+                      return (
+                        <button
+                          key={hobby}
+                          type="button"
+                          onClick={() => toggleHobby(hobby)}
+                          className={`hbd-chip ${active ? 'is-on' : ''}`}
+                        >
+                          {active ? '✓ ' : '+ '}{hobby}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    onClick={() => setStep(2)}
+                    className="hbd-btn hbd-btn-ghost"
+                    style={{ padding: '14px 20px' }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(4)}
+                    className="hbd-btn hbd-btn-ghost"
+                    style={{ padding: '14px 18px', color: 'var(--muted)', fontWeight: 600 }}
+                  >
+                    Skip for now →
+                  </button>
+                  <button
+                    onClick={() => setStep(4)}
+                    className="hbd-btn hbd-btn-primary"
+                    style={{ flex: 1, padding: '14px' }}
+                  >
+                    Next: Idols <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Idols & Role Models - SKIPPABLE */}
+            {step === 4 && (
+              <div className="hbd-fade-up">
+                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  <div style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    margin: '0 auto 12px auto',
+                    boxShadow: '0 8px 20px rgba(245, 158, 11, 0.25)'
+                  }}>
+                    <Star size={26} color="#fff" />
+                  </div>
+                  <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px' }}>
+                    Who are your idols & role models?
+                  </h1>
+                  <p style={{ color: 'var(--muted)', fontSize: '13px' }}>
+                    Pioneers and luminaries who inspire your journey. (Optional & skippable)
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label className="hbd-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--gold)', marginBottom: '10px' }}>
+                    <Star size={14} fill="var(--gold)" /> CHOOSE OR ADD IDOLS
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                    {PRESET_IDOLS.map(idol => {
+                      const active = selectedIdols.includes(idol);
+                      return (
+                        <button
+                          key={idol}
+                          type="button"
+                          onClick={() => toggleIdol(idol)}
+                          className={`hbd-chip ${active ? 'is-on' : ''}`}
+                        >
+                          {active ? '✓ ' : '+ '}{idol}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="hbd-input"
+                      placeholder="Add custom idol (e.g. Nikola Tesla, Toni Morrison)..."
+                      value={customIdol}
+                      onChange={e => setCustomIdol(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && addCustomIdol()}
+                    />
+                    <button
+                      type="button"
+                      onClick={addCustomIdol}
+                      className="hbd-btn hbd-btn-ghost"
+                      style={{ padding: '0 16px' }}
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{
+                  backgroundColor: 'var(--purple-soft)',
+                  borderRadius: '14px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  marginBottom: '24px',
+                  border: '1px solid rgba(91, 42, 134, 0.12)'
+                }}>
+                  <Star size={18} color="var(--purple)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ fontSize: '11.5px', lineHeight: 1.45, color: 'var(--fg)' }}>
+                    <strong>Global Luminary Spotlights:</strong> Whenever your role models have historic milestones, birthdates, or awards, HBD highlights them on your 1-Day View to inspire you.
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    onClick={() => setStep(3)}
+                    className="hbd-btn hbd-btn-ghost"
+                    style={{ padding: '14px 20px' }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(5)}
+                    className="hbd-btn hbd-btn-ghost"
+                    style={{ padding: '14px 18px', color: 'var(--muted)', fontWeight: 600 }}
+                  >
+                    Skip for now →
+                  </button>
+                  <button
+                    onClick={() => setStep(5)}
+                    className="hbd-btn hbd-btn-primary"
+                    style={{ flex: 1, padding: '14px' }}
+                  >
+                    Next: Goals Radar <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: Goals & Milestone Radar - SKIPPABLE */}
+            {step === 5 && (
+              <div className="hbd-fade-up">
+                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  <div style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, var(--purple), #7C3AED)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    margin: '0 auto 12px auto',
+                    boxShadow: '0 8px 20px rgba(124, 58, 237, 0.25)'
+                  }}>
+                    <Award size={26} color="#fff" />
+                  </div>
+                  <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px' }}>
+                    What milestones are you pursuing?
+                  </h1>
+                  <p style={{ color: 'var(--muted)', fontSize: '13px' }}>
+                    Track startups, creative debuts, academic runs, and life milestones. (Optional & skippable)
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label className="hbd-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--purple)', marginBottom: '10px' }}>
+                    <Award size={14} /> ACTIVE LIFE MILESTONES & VENTURES
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                    {PRESET_GOALS.map(goal => {
+                      const active = selectedGoals.includes(goal);
+                      return (
+                        <button
+                          key={goal}
+                          type="button"
+                          onClick={() => toggleGoal(goal)}
+                          className={`hbd-chip ${active ? 'is-on' : ''}`}
+                        >
+                          {active ? '✓ ' : '+ '}{goal}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="hbd-input"
+                      placeholder="Add custom milestone (e.g. AfroTech Seed Round, Book Launch)..."
+                      value={customGoal}
+                      onChange={e => setCustomGoal(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && addCustomGoal()}
+                    />
+                    <button
+                      type="button"
+                      onClick={addCustomGoal}
+                      className="hbd-btn hbd-btn-ghost"
+                      style={{ padding: '0 16px' }}
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{
+                  backgroundColor: 'var(--purple-soft)',
+                  borderRadius: '14px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  marginBottom: '24px',
+                  border: '1px solid rgba(91, 42, 134, 0.12)'
+                }}>
+                  <Award size={18} color="var(--purple)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ fontSize: '11.5px', lineHeight: 1.45, color: 'var(--fg)' }}>
+                    <strong>Venture & Life Radar:</strong> You can create venture objects (startups, creative studios, wedding milestones) attached to your profile anytime to commemorate their founding dates.
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    onClick={() => setStep(4)}
+                    className="hbd-btn hbd-btn-ghost"
+                    style={{ padding: '14px 20px' }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(6)}
+                    className="hbd-btn hbd-btn-ghost"
+                    style={{ padding: '14px 18px', color: 'var(--muted)', fontWeight: 600 }}
+                  >
+                    Skip for now →
+                  </button>
+                  <button
+                    onClick={() => setStep(6)}
+                    className="hbd-btn hbd-btn-primary"
+                    style={{ flex: 1, padding: '14px' }}
+                  >
+                    Next: Gift Wishes <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 6: Celebration Wishes & Avoids */}
+            {step === 6 && (
+              <div className="hbd-fade-up">
+                <div style={{ textAlign: 'center', marginBottom: '22px' }}>
+                  <div style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '16px',
                     background: 'linear-gradient(135deg, var(--gold), var(--coral))',
                     display: 'grid',
                     placeItems: 'center',
-                    margin: '0 auto 16px auto',
+                    margin: '0 auto 12px auto',
                     boxShadow: '0 8px 20px rgba(244, 185, 66, 0.3)'
                   }}>
-                    <Gift size={28} color="#fff" />
+                    <Gift size={26} color="#fff" />
                   </div>
-                  <h1 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '6px' }}>
+                  <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px' }}>
                     How do you like to be celebrated?
                   </h1>
-                  <p style={{ color: 'var(--muted)', fontSize: '14px' }}>
-                    Helps your friends and the HBD Gift Engine pick what makes you smile.
+                  <p style={{ color: 'var(--muted)', fontSize: '13px' }}>
+                    Helps your circle and the HBD Gift Engine pick what makes you smile.
                   </p>
                 </div>
 
                 {/* Things you love */}
-                <div style={{ marginBottom: '22px' }}>
-                  <label className="hbd-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--purple)' }}>
-                    <Heart size={14} fill="var(--purple)" /> THINGS YOU LOVE
+                <div style={{ marginBottom: '20px' }}>
+                  <label className="hbd-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--purple)', marginBottom: '8px' }}>
+                    <Heart size={14} fill="var(--purple)" /> THINGS YOU LOVE (GIFTS & EXPERIENCES)
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
                     {PRESET_INTERESTS.map(item => {
@@ -555,7 +987,7 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
                     <input
                       type="text"
                       className="hbd-input"
-                      placeholder="Add custom interest (e.g. Scented Candles)..."
+                      placeholder="Add custom gift interest (e.g. Scented Candles)..."
                       value={customInterest}
                       onChange={e => setCustomInterest(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && addCustomInterest()}
@@ -572,8 +1004,8 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
                 </div>
 
                 {/* Things to avoid */}
-                <div style={{ marginBottom: '28px' }}>
-                  <label className="hbd-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--coral)' }}>
+                <div style={{ marginBottom: '26px' }}>
+                  <label className="hbd-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--coral)', marginBottom: '8px' }}>
                     <X size={14} /> THINGS TO AVOID (ALLERGIES / DISLIKES)
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
@@ -613,9 +1045,9 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
 
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
-                    onClick={() => setStep(2)}
+                    onClick={() => setStep(5)}
                     className="hbd-btn hbd-btn-ghost"
-                    style={{ padding: '14px 24px' }}
+                    style={{ padding: '14px 22px' }}
                   >
                     Back
                   </button>

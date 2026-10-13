@@ -84,6 +84,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44
   );
 
+  // Clearance to keep interactions & captions floating right above the bottom nav bar
+  const bottomNavClearance = 68 + (insets.bottom > 0 ? insets.bottom : 8);
+
   const renderReelItem = ({ item }: { item: ReelPost }) => (
     <View style={[styles.reelContainer, { height: containerHeight }]}>
       {/* Background Media */}
@@ -106,7 +109,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       </View>
 
       {/* Right Interaction Rail */}
-      <View style={styles.actionRail}>
+      <View style={[styles.actionRail, { bottom: bottomNavClearance }]}>
         {/* Cheer (Heart / Confetti) */}
         <TouchableOpacity 
           style={[styles.actionBtn, item.isCheered && styles.actionBtnCheered]} 
@@ -158,7 +161,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       </View>
 
       {/* Bottom Creator Info & Caption */}
-      <View style={styles.bottomOverlay}>
+      <View style={[styles.bottomOverlay, { paddingBottom: bottomNavClearance }]}>
         <View style={styles.creatorRow}>
           <Image 
             source={{ uri: item.user.avatarUrl }} 

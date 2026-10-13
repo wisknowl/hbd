@@ -5,12 +5,17 @@ import {
   StyleSheet, 
   ScrollView, 
   Image, 
-  TouchableOpacity, 
-  SafeAreaView 
+  TouchableOpacity,
+  Platform,
+  StatusBar 
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HBD_THEME } from '../theme';
 
 export const MemoryVaultScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44);
+
   const archives = [
     {
       id: 'mv-1',
@@ -31,8 +36,8 @@ export const MemoryVaultScreen: React.FC = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: topInset + 10, paddingBottom: 120 }]} showsVerticalScrollIndicator={false}>
         {/* Dark Hero Card */}
         <View style={styles.heroCard}>
           <Text style={styles.heroKicker}>ARCHIVE & PRESERVE</Text>
@@ -65,7 +70,7 @@ export const MemoryVaultScreen: React.FC = () => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

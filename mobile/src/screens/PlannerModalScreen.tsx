@@ -5,12 +5,15 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  TextInput, 
+  TextInput,
   Modal, 
   SafeAreaView, 
   Linking, 
-  Alert 
+  Alert,
+  Platform,
+  StatusBar
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { HBD_THEME } from '../theme';
 import type { CelebrationCategory, PackageTier } from '../../../shared/types';
@@ -28,6 +31,8 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
   initialCelebrant = '',
   initialCategory = 'BIRTHDAY',
 }) => {
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44);
   const [category, setCategory] = useState<CelebrationCategory>(initialCategory);
   const [celebrant, setCelebrant] = useState(initialCelebrant);
   const [city, setCity] = useState('Douala');
@@ -69,7 +74,7 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView style={styles.modalSafe}>
-        <View style={styles.headerBar}>
+        <View style={[styles.headerBar, { paddingTop: topInset + 6 }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Feather name="x" size={18} color={HBD_THEME.colors.charcoal} />
           </TouchableOpacity>
@@ -77,7 +82,7 @@ export const PlannerModalScreen: React.FC<PlannerModalScreenProps> = ({
           <View style={{ width: 32 }} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.scrollBody, { paddingBottom: Math.max(insets.bottom, 20) + 40 }]} showsVerticalScrollIndicator={false}>
           {/* Section 1: What are you celebrating? */}
           <Text style={styles.fieldLabel}>WHAT ARE YOU CELEBRATING?</Text>
           <View style={styles.chipsRow}>

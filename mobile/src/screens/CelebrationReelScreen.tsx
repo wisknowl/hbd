@@ -8,8 +8,10 @@ import {
   Image, 
   TouchableOpacity,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  Platform
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { HBD_THEME } from '../theme';
 import type { ReelPost, CelebrationCategory } from '../../../shared/types';
@@ -29,6 +31,8 @@ export const CelebrationReelScreen: React.FC<Props> = ({
   onOpenPlanner,
   onOpenGifts
 }) => {
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44);
   const [feedMode, setFeedMode] = useState<'foryou' | 'circle'>('foryou');
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
 
@@ -62,7 +66,7 @@ export const CelebrationReelScreen: React.FC<Props> = ({
       <View style={styles.darkGradientOverlay} />
 
       {/* Top Overlay: Feed Switcher & Categories */}
-      <SafeAreaView style={styles.topSafeArea}>
+      <View style={[styles.topSafeArea, { paddingTop: topInset + 6 }]}>
         <View style={styles.feedModeRow}>
           <TouchableOpacity 
             onPress={() => setFeedMode('circle')}
@@ -113,7 +117,7 @@ export const CelebrationReelScreen: React.FC<Props> = ({
             </TouchableOpacity>
           ))}
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* Celebration Badge Banner */}
       <View style={styles.badgeBanner}>
@@ -172,7 +176,7 @@ export const CelebrationReelScreen: React.FC<Props> = ({
       </View>
 
       {/* Bottom Creator Info & Details */}
-      <View style={styles.bottomOverlay}>
+      <View style={[styles.bottomOverlay, { paddingBottom: Math.max(insets.bottom, 12) + 40 }]}>
         <View style={styles.creatorRow}>
           <Image source={{ uri: item.user.avatarUrl }} style={styles.avatar} />
           <View style={{ flex: 1 }}>

@@ -16,12 +16,15 @@ import {
   Package,
   Users,
   User,
-  MessageSquare
+  MessageSquare,
+  Bell,
+  Box
 } from 'lucide-react';
 import { useSession } from '../session';
 import { Avatar } from './Avatar';
+import { Tooltip } from './Tooltip';
 
-export type NavViewType = 'explore' | 'foryou' | 'hbdays' | 'inbox' | 'friends' | 'profile' | 'gifts' | 'rooms' | 'vault' | 'packages';
+export type NavViewType = 'explore' | 'foryou' | 'hbdays' | 'messages' | 'inbox' | 'friends' | 'profile' | 'gifts' | 'rooms' | 'vault' | 'packages' | 'surprisepackage';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -32,6 +35,8 @@ interface SidebarProps {
   openPlanner: () => void;
   isDark: boolean;
   toggleTheme: () => void;
+  onToggleActivity: () => void;
+  isActivityOpen: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -43,6 +48,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   openPlanner,
   isDark,
   toggleTheme,
+  onToggleActivity,
+  isActivityOpen,
 }) => {
   const { profile } = useSession();
   const [searchValue, setSearchValue] = useState('');
@@ -57,8 +64,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'explore', label: 'World Celebrations', icon: Globe },
     { id: 'foryou', label: 'Moments', icon: Home },
     { id: 'hbdays', label: 'HBDays', icon: Calendar },
-    { id: 'inbox', label: 'Celebration Inbox', icon: MessageSquare },
     { id: 'friends', label: 'Friends & Circle', icon: Users },
+    { id: 'surprisepackage', label: 'Surprise Packages', icon: Box, badge: '2' },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, badge: '2' },
+    { id: 'activity', label: 'Activity', icon: Bell, badge: '3', isDrawer: true },
     { id: 'profile', label: 'My Profile', icon: User },
     { id: 'gifts', label: 'Universal Gifts', icon: Gift },
     { id: 'rooms', label: 'Celebration Rooms', icon: Radio },
@@ -296,16 +305,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div style={{ display: 'grid', gap: '4px' }}>
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeView === item.id;
-            return (
+            const isDrawer = (item as any).isDrawer;
+            const badge = (item as any).badge;
+            const isActive = isDrawer ? isActivityOpen : activeView === item.id;
+
+            const buttonContent = (
               <button
                 key={item.id}
-                onClick={() => setActiveView(item.id as any)}
-                title={isCollapsed ? item.label : undefined}
+                onClick={() => {
+                  if (isDrawer) {
+                    onToggleActivity();
+                  } else {
+                    setActiveView(item.id as any);
+                  }
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: isCollapsed ? 'center' : 'flex-start',
+                  justifyContent: isCollapsed ? 'center' : 'space-between',
                   gap: '14px',
                   padding: isCollapsed ? '12px' : '12px 14px',
                   borderRadius: '14px',
@@ -315,13 +332,67 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   backgroundColor: isActive ? 'var(--coral-soft)' : 'transparent',
                   textAlign: 'left',
                   width: '100%',
-                  transition: 'all 0.15s'
+                  transition: 'all 0.15s',
+                  position: 'relative',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'var(--bg)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
                 }}
               >
-                <Icon size={21} color={isActive ? 'var(--coral)' : 'currentColor'} style={{ flexShrink: 0 }} />
-                {!isCollapsed && <span>{item.label}</span>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', position: 'relative' }}>
+                  <Icon size={21} color={isActive ? 'var(--coral)' : 'currentColor'} style={{ flexShrink: 0 }} />
+                  {isCollapsed && badge && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '-3px',
+                        right: '-5px',
+                        width: '7px',
+                        height: '7px',
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--coral)',
+                      }}
+                    />
+                  )}
+                  {!isCollapsed && <span>{item.label}</span>}
+                </div>
+
+                {!isCollapsed && badge && (
+                  <span
+                    style={{
+                      fontSize: '10.5px',
+                      fontWeight: 800,
+                      padding: '1px 7px',
+                      borderRadius: '999px',
+                      backgroundColor: isActive ? 'var(--coral)' : 'var(--bg)',
+                      color: isActive ? '#FFF8EE' : 'var(--muted)',
+                      border: '1px solid var(--line)',
+                    }}
+                  >
+                    {badge}
+                  </span>
+                )}
               </button>
             );
+
+            if (isCollapsed) {
+              return (
+                <Tooltip key={item.id} label={item.label} side="right" delayMs={60}>
+                  {buttonContent}
+                </Tooltip>
+              );
+            }
+
+            return buttonContent;
           })}
 
           <div style={{ height: '1px', backgroundColor: 'var(--line)', margin: '10px 4px' }} />

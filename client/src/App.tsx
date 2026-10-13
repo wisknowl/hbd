@@ -11,7 +11,11 @@ import { CelebrationRoomsView } from './components/CelebrationRoomsView';
 import { OnboardingView } from './components/OnboardingView';
 import { FriendsView } from './components/FriendsView';
 import { ProfileView } from './components/ProfileView';
-import { InboxView } from './components/InboxView';
+import { MessagesView } from './components/MessagesView';
+import { SurprisePackageView } from './components/SurprisePackageView';
+import { TopFloatingBar } from './components/TopFloatingBar';
+import { ActivityDrawer } from './components/ActivityDrawer';
+import { MobileCompanionModal } from './components/MobileCompanionModal';
 import { useSession } from './session';
 import { mockReels, mockPackages } from './mockData';
 import type { ReelPost, CelebrationCategory, PersonCircleMember } from '../../shared/types';
@@ -24,6 +28,11 @@ export const App: React.FC = () => {
   const [isDark, setIsDark] = useState(false);
   const [reels, setReels] = useState<ReelPost[]>(mockReels);
   const [selectedPersonForGifts, setSelectedPersonForGifts] = useState<PersonCircleMember | null>(null);
+  const [selectedCelebrantForSurprise, setSelectedCelebrantForSurprise] = useState<string | undefined>(undefined);
+
+  // Activity drawer & Mobile companion modal states
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   
   // Planner modal states
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
@@ -110,6 +119,28 @@ export const App: React.FC = () => {
         openPlanner={() => handleOpenPlanner('BIRTHDAY', '')}
         isDark={isDark}
         toggleTheme={toggleTheme}
+        onToggleActivity={() => setIsActivityOpen(prev => !prev)}
+        isActivityOpen={isActivityOpen}
+      />
+
+      {/* Top Right Floating Control Capsule (Activity, Mobile Companion, Profile) */}
+      <TopFloatingBar
+        onToggleActivity={() => setIsActivityOpen(prev => !prev)}
+        onOpenMobileModal={() => setIsMobileModalOpen(true)}
+        onOpenProfile={() => setActiveView('profile')}
+        isActivityOpen={isActivityOpen}
+        unreadCount={3}
+      />
+
+      {/* Rolled-out Left Block: Notifications & Activity with CTAs */}
+      <ActivityDrawer
+        isOpen={isActivityOpen}
+        onClose={() => setIsActivityOpen(false)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onOpenPlanner={(celebrant) => handleOpenPlanner('BIRTHDAY', celebrant || '')}
+        onNavigateToGifts={() => setActiveView('gifts')}
+        onNavigateToMessages={() => setActiveView('messages')}
+        onNavigateToVault={() => setActiveView('vault')}
       />
 
       {/* Main Full-Height Content Area */}
@@ -133,13 +164,24 @@ export const App: React.FC = () => {
           <HBDaysView
             onPlanCelebration={(cat, name) => handleOpenPlanner(cat, name)}
             onOpenGiftsForPerson={handleOpenGiftsForPerson}
+            onOpenSurprisePackage={(celebrant) => {
+              setSelectedCelebrantForSurprise(celebrant);
+              setActiveView('surprisepackage');
+            }}
           />
         )}
 
-        {activeView === 'inbox' && (
-          <InboxView 
-            onOpenPlanner={(name) => handleOpenPlanner('BIRTHDAY', name)}
-            onNavigateToVault={() => setActiveView('vault')}
+        {activeView === 'surprisepackage' && (
+          <SurprisePackageView
+            preselectedCelebrant={selectedCelebrantForSurprise}
+            onBackToDates={() => setActiveView('hbdays')}
+          />
+        )}
+
+        {(activeView === 'messages' || activeView === 'inbox') && (
+          <MessagesView 
+            onOpenPlanner={(name) => handleOpenPlanner('BIRTHDAY', name || '')}
+            onOpenGifts={() => setActiveView('gifts')}
           />
         )}
 
@@ -183,6 +225,12 @@ export const App: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Mobile Companion / Expo Launcher Modal */}
+      <MobileCompanionModal
+        isOpen={isMobileModalOpen}
+        onClose={() => setIsMobileModalOpen(false)}
+      />
 
       {/* Celebration Planner Modal */}
       <PlannerModal

@@ -5,11 +5,18 @@
 
 export type CelebrationCategory = 
   | 'BIRTHDAY'     // Personal birthdays
-  | 'BEGINNING'    // Startups, products, ideas, projects, movements
-  | 'MILESTONE'    // Graduations, 1M users, promotions, breakthroughs
+  | 'BEGINNING'    // Startups, products, ideas, projects, movements, graduations, new chapters
+  | 'MILESTONE'    // Sobriety, health recovery, 1M users, promotions, breakthroughs
   | 'ANNIVERSARY'  // Company anniversaries, weddings, historical
   | 'ACHIEVEMENT'  // Personal and community triumphs
-  | 'COMMUNITY';   // Causes, teachers, unsung heroes
+  | 'COMMUNITY'    // Causes, teachers, unsung heroes
+  | 'ICONS'        // Idols, mentors, inspirational cultural legends
+  | 'FAITH'        // Sacred holy days, rites of passage, Eid, Diwali, Easter, Yom Kippur, Hanukkah
+  | 'TRIBUTE';     // In Memoriam, legacy remembrances, celebration of life
+
+export type CelebrationTone = 'FESTIVE' | 'TRIBUTE';
+
+export type CommercialIntent = 'GIFT' | 'POT' | 'TOAST' | 'EXPERIENCE';
 
 export type PackageTier = 
   | 'MINI'         // Digital card, small gift, cake, delivery
@@ -233,6 +240,13 @@ export interface CelebrationPreferences {
   favoriteColor?: string;     // hex
   clothingSize?: string;
   shoeSize?: string;
+  idols?: string[];           // Role models / icons
+  musicGenres?: string[];     // Passions & music
+  animalTypes?: string[];     // Passions & pets/animals
+  hobbies?: string[];         // Passions & hobbies
+  personalGoals?: string[];   // Milestones & aspirations
+  traditions?: string[];      // Cultural & sacred traditions: 'SECULAR', 'CHRISTIAN', 'MUSLIM', 'HINDU', 'JEWISH', 'PAN_AFRICAN'
+  showTributes?: boolean;     // Opt-in for In Memoriam & legacy remembrances
 }
 
 export interface PrivacySettings {
@@ -257,10 +271,288 @@ export interface HBDProfile {
   privacy: PrivacySettings;
   authMethod?: AuthMethod;
   contact?: string;           // phone or email (private, never shown to others)
+  // Official Document Verifiable Identity (Anti-Duplication)
+  officialIdentity?: OfficialIdentityRecord;
+  civilIdentityHash?: string; // SHA-256 hash of verified document to prevent duplicate person registrations
+  isOfficialVerified?: boolean;
   createdAt?: string;
+}
+
+// -------------------------------------------------------------
+// Official Document Identity Verification & Anti-Duplication Engine
+// -------------------------------------------------------------
+export type VerificationDocumentType = 
+  | 'PASSPORT' 
+  | 'NATIONAL_ID' 
+  | 'DRIVERS_LICENSE' 
+  | 'BIRTH_CERTIFICATE';
+
+export type VerificationStatus = 
+  | 'UNVERIFIED' 
+  | 'PENDING_DOCUMENT_REVIEW' 
+  | 'VERIFIED_OFFICIAL' 
+  | 'REJECTED';
+
+export interface OfficialIdentityRecord {
+  legalFirstName: string;
+  legalLastName: string;
+  legalMiddleName?: string;
+  documentType: VerificationDocumentType;
+  civilIdentityHash: string; // Unique cryptographic fingerprint ensuring a human is never registered twice
+  birthDate: string;        // YYYY-MM-DD from official civil document
+  countryOfIssuance: string;
+  status: VerificationStatus;
+  verifiedAt?: string;
+  verificationBadgeLevel?: 'CIVIL_VERIFIED' | 'GOVERNMENT_ID' | 'DIPLOMATIC_PUBLIC_FIGURE';
+}
+
+// -------------------------------------------------------------
+// Managed Celebratory Objects (Spawned by Verified Individual)
+// -------------------------------------------------------------
+export type ManagedObjectType = 'STARTUP' | 'WEDDING' | 'MILESTONE' | 'IDOL';
+
+export interface StartupObject {
+  id: string;
+  ownerProfileId: string;
+  type: 'STARTUP';
+  name: string;
+  foundingDate: string; // YYYY-MM-DD
+  industry: string;
+  tagline?: string;
+  logoUrl?: string;
+  websiteUrl?: string;
+  isVerifiedVenture?: boolean;
+  teamMemberIds?: string[];
+  annualMilestones?: { year: number; title: string }[];
+}
+
+export interface WeddingObject {
+  id: string;
+  ownerProfileId: string;
+  type: 'WEDDING';
+  title: string; // e.g. "Sarah & Michael"
+  partnerOneName: string;
+  partnerTwoName: string;
+  partnerTwoProfileId?: string;
+  weddingDate: string; // YYYY-MM-DD
+  anniversaryTier?: string; // e.g. "5th Anniversary (Wood)"
+  venueOrCity?: string;
+  registryUrl?: string;
+  coverImage?: string;
+}
+
+export interface AcademicMilestoneObject {
+  id: string;
+  ownerProfileId: string;
+  type: 'MILESTONE';
+  title: string; // e.g. "Ph.D. in Artificial Intelligence"
+  milestoneType: 'GRADUATION' | 'CERTIFICATION' | 'HONOR' | 'DISCOVERY' | 'SOBRIETY' | 'RETIREMENT';
+  institution: string;
+  achievementDate: string; // YYYY-MM-DD
+  honors?: string;
+  credentialUrl?: string;
+}
+
+export interface IdolHeroObject {
+  id: string;
+  createdById: string;
+  type: 'IDOL';
+  name: string; // e.g. "Nelson Mandela", "Prof. Wangari Maathai"
+  domain: 'SCIENCE' | 'SPORTS' | 'ARTS_MUSIC' | 'CIVIL_RIGHTS' | 'TECH' | 'COMMUNITY' | 'LITERATURE';
+  celebrationDate: string; // YYYY-MM-DD (Birthdate or Commemoration Day)
+  tributeBio: string;
+  avatarUrl?: string;
+  isClaimedByPerson: boolean;
+  claimedProfileId?: string;
+  followersCount: number;
+}
+
+export type ManagedCelebrationObject = 
+  | StartupObject 
+  | WeddingObject 
+  | AcademicMilestoneObject 
+  | IdolHeroObject;
+
+// -------------------------------------------------------------
+// Placeholder Contact & Reconciliation Protocol
+// -------------------------------------------------------------
+export interface PlaceholderContact {
+  id: string;
+  createdById: string;
+  fullName: string;
+  tentativeBirthDate: string;
+  relationship: string;
+  whatTheyWant: string[];
+  whatTheyDontWant: string[];
+  privateNotes?: string;
+  claimedProfileId?: string;
+  isClaimed: boolean;
+  reconciliationStatus: 'UNCLAIMED' | 'MATCH_DETECTED' | 'LINKED_VERIFIED';
+}
+
+// -------------------------------------------------------------
+// Universal 12-Month Global Calendar Domain Models
+// -------------------------------------------------------------
+export type CalendarGeographicScope = 'LOCAL' | 'COUNTRY' | 'CONTINENT' | 'GLOBAL' | 'CIRCLE';
+
+export type InspirationDomain = 
+  | 'ALL_DOMAINS'
+  | 'TECH_BUSINESS'
+  | 'MUSIC_ARTS'
+  | 'SPORTS_PIONEERS'
+  | 'HUMANITARIAN_LEADERS'
+  | 'SCIENCE_DISCOVERY'
+  | 'EARTH_NATURE'
+  | 'FAITH_PHILOSOPHY';
+
+export interface GlobalCalendarEntry {
+  id: string;
+  title: string;
+  subtitle?: string;
+  category: CelebrationCategory;
+  domain?: InspirationDomain;
+  objectType: ManagedObjectType | 'PERSON';
+  date: string; // YYYY-MM-DD
+  day: number;
+  month: number; // 1-12
+  year?: number;
+  avatarUrl?: string;
+  monogram: string;
+  color: string;
+  geoScope: CalendarGeographicScope;
+  location?: string;
+  isVerifiedIdentity: boolean;
+  daysRemaining: number;
+  relativeLabel: string; // "in 3 days", "28 days ago"
+  wants?: string[];
+  dontWants?: string[];
+  managedObjectId?: string;
+  tone?: CelebrationTone;
+  commercialIntent?: CommercialIntent;
+  countryCode?: string;
+  heritageTradition?: string;
 }
 
 // -------------------------------------------------------------
 // Friends (Follow = one-way, Friend = mutual)
 // -------------------------------------------------------------
 export type FriendshipStatus = 'NONE' | 'REQUEST_SENT' | 'REQUEST_RECEIVED' | 'FRIENDS';
+
+// -------------------------------------------------------------
+// Surprise Package Domain Models & Compilation Types
+// -------------------------------------------------------------
+export type SurprisePackageStatus = 'PLANNING' | 'LOCKED' | 'DELIVERED';
+export type SurpriseVisibility = 'PRIVATE' | 'PUBLIC';
+
+export type ContributionType = 
+  | 'VIDEO'           // 15-60s video tribute/wish
+  | 'PHOTO'           // Throwback photo or celebration visual
+  | 'VOICE_NOTE'      // Spoken heartfelt voice note
+  | 'LETTER'          // Written letter or digital card message
+  | 'MONEY'           // Cash contribution to pooled fund
+  | 'PHYSICAL_GIFT'   // Physical item (e.g. perfume, watch, flowers, custom cake)
+  | 'DIGITAL_GIFT'    // Digital item (e.g. playlist, artwork, voucher, subscription)
+  | 'SERVICE';        // Service contribution (e.g. "I'll bake cake", "I will DJ", "Airport pickup")
+
+export interface SurpriseContribution {
+  id: string;
+  packageId: string;
+  contributorId: string;
+  contributorName: string;
+  contributorAvatar: string;
+  type: ContributionType;
+  // Media / Tribute attributes
+  mediaUrl?: string;
+  thumbnailUrl?: string;
+  messageText?: string;
+  durationSeconds?: number;
+  // Gift & Service attributes
+  giftTitle?: string;            // e.g. "Vintage Leather Watch" or "Doorstep Acoustic Serenade"
+  giftDescription?: string;
+  estimatedValue?: number;
+  amountContributed?: number;    // for MONEY pool
+  currency?: string;
+  deliveryMethod?: 'IN_PERSON' | 'COURIER' | 'DIGITAL_TRANSFER' | 'PERFORMED_ON_DAY';
+  // Compilation Reel Indexing Flag (set by Coordinator)
+  isFlaggedForCompilation: boolean;
+  compilationOrder?: number;     // 1, 2, 3...
+  compilationCaption?: string;
+  submittedAt: string;
+}
+
+export interface SurpriseDiscussionMessage {
+  id: string;
+  packageId: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar: string;
+  text: string;
+  mediaUrl?: string;
+  mediaType?: 'IMAGE' | 'VOICE';
+  reactions?: Record<string, number>;
+  createdAt: string;
+}
+
+export interface SurpriseCompilationItem {
+  contributionId: string;
+  mediaUrl: string;
+  type: 'VIDEO' | 'PHOTO' | 'LETTER' | 'VOICE_NOTE';
+  senderName: string;
+  caption?: string;
+  durationSeconds: number;
+  order: number;
+}
+
+export interface SurpriseCompilationReel {
+  id: string;
+  packageId: string;
+  title: string;
+  totalDurationSeconds: number;
+  soundtrackTitle?: string;
+  soundtrackUrl?: string;
+  compiledItems: SurpriseCompilationItem[];
+  isReady: boolean;
+  compiledAt?: string;
+}
+
+export interface SurprisePackage {
+  id: string;
+  title: string;
+  celebrantId: string;
+  celebrantName: string;
+  celebrantAvatar: string;
+  celebrantBirthDate: string;
+  celebrantRelationship?: string;
+  organizerId: string;
+  organizerName: string;
+  organizerAvatar: string;
+  status: SurprisePackageStatus;
+  visibility: SurpriseVisibility;    // PRIVATE (circle only) or PUBLIC (open community milestone)
+  targetDeliveryDate: string;        // ISO timestamp of celebration unlock
+  deliveredAt?: string;
+  invitedCircleIds: string[];
+  contributions: SurpriseContribution[];
+  discussionMessages: SurpriseDiscussionMessage[];
+  compilationReel?: SurpriseCompilationReel;
+  // Dynamic Pooled Goals & Registries
+  hasPooledGoal: boolean;
+  pooledGoalAmount?: number;
+  currentPooledAmount: number;
+  currency: string;
+  linkedVendorServices?: {
+    serviceId: string;
+    vendorName: string;
+    title: string;
+    cost: number;
+    status: 'PROPOSED' | 'CONFIRMED' | 'DELIVERED';
+  }[];
+  // Post-delivery Recipient Response
+  recipientReaction?: {
+    unboxedAt: string;
+    thankYouText?: string;
+    thankYouMediaUrl?: string;
+    reactionEmoji: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}

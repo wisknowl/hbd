@@ -1,14 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
   Text, 
   TouchableOpacity, 
   SafeAreaView, 
-  ActivityIndicator 
+  ActivityIndicator,
+  Platform 
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+
+// Safe lazy loading: Prevents "Cannot find native module 'ExpoNavigationBar'" crash in Expo Go
+let NavigationBarModule: any = null;
+try {
+  NavigationBarModule = require('expo-navigation-bar');
+} catch {
+  NavigationBarModule = null;
+}
 import { Feather } from '@expo/vector-icons';
+import { AppIcon } from './src/components/AppIcon';
 import { 
   useFonts, 
   Poppins_500Medium, 
@@ -25,12 +35,15 @@ import {
 
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemeProvider, useAppTheme } from './src/context/ThemeContext';
+import { AuthProvider } from './src/context/AuthContext';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { PackagesScreen } from './src/screens/PackagesScreen';
 import { DatesScreen } from './src/screens/DatesScreen';
 import { InboxScreen } from './src/screens/InboxScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { PlannerModalScreen } from './src/screens/PlannerModalScreen';
+import { SurprisePackageScreen } from './src/screens/SurprisePackageScreen';
+import { AuthModalScreen } from './src/screens/AuthModalScreen';
 import type { ReelPost } from '../shared/types';
 
 const INITIAL_REELS: ReelPost[] = [
@@ -112,6 +125,13 @@ function MainApp() {
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
   const [plannerCelebrant, setPlannerCelebrant] = useState('');
   const [selectedRecipientForGifts, setSelectedRecipientForGifts] = useState<string | undefined>(undefined);
+  const [activeSurpriseCelebrant, setActiveSurpriseCelebrant] = useState<string | null>(null);
+  const [isSurpriseActive, setIsSurpriseActive] = useState(false);
+
+  const handleOpenSurprisePackage = (celebrantName?: string) => {
+    setActiveSurpriseCelebrant(celebrantName || 'Mama Chantal');
+    setIsSurpriseActive(true);
+  };
 
   const handleCheer = (id: string) => {
     setReels(prev => prev.map(r => r.id === id ? { ...r, cheerCount: r.cheerCount + 1, isCheered: true } : r));
@@ -127,47 +147,81 @@ function MainApp() {
     setCurrentTab('gifts');
   };
 
+  const activeColor = isDark ? colors.gold : colors.purple;
+  const inactiveColor = isDark ? '#A399B0' : '#736B7C';
+
+  // Synchronize Android system navigation bar buttons if native module is available
+  useEffect(() => {
+    if (Platform.OS === 'android' && NavigationBarModule?.NavigationBar?.setStyle) {
+      try {
+        // 'dark' = dark navigation bar with white buttons (Dark mode)
+        // 'light' = light navigation bar with black buttons (Light mode)
+        NavigationBarModule.NavigationBar.setStyle(isDark ? 'dark' : 'light');
+      } catch (err) {
+        // Safe fallback: Android OS handles default styling
+      }
+    }
+  }, [isDark]);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      {NavigationBarModule?.NavigationBar && (
+        <NavigationBarModule.NavigationBar style={isDark ? 'dark' : 'light'} />
+      )}
       
-      {/* Active Screen View */}
-      <View style={{ flex: 1 }}>
-        {currentTab === 'home' && (
-          <HomeScreen
-            reels={reels}
-            onCheerReel={handleCheer}
-            onOpenPlanner={handleOpenPlanner}
-            onOpenGifts={handleOpenGiftsForPerson}
-            onNavigateToInbox={() => setCurrentTab('inbox')}
+      {/* Active Screen View (Approach 1: full-bleed layout, individual screens manage scroll clearance) */}
+      <View style={styles.activeScreenContainer}>
+        {isSurpriseActive ? (
+          <SurprisePackageScreen
+            preselectedCelebrant={activeSurpriseCelebrant || undefined}
+            onBack={() => setIsSurpriseActive(false)}
+            onNavigateToGifts={(person) => {
+              setIsSurpriseActive(false);
+              handleOpenGiftsForPerson(person);
+            }}
           />
-        )}
+        ) : (
+          <>
+            {currentTab === 'home' && (
+              <HomeScreen
+                reels={reels}
+                onCheerReel={handleCheer}
+                onOpenPlanner={handleOpenPlanner}
+                onOpenGifts={handleOpenGiftsForPerson}
+                onNavigateToInbox={() => setCurrentTab('inbox')}
+              />
+            )}
 
-        {currentTab === 'gifts' && (
-          <PackagesScreen 
-            preselectedRecipient={selectedRecipientForGifts}
-            onSelectPackage={(title) => handleOpenPlanner(title)}
-          />
-        )}
+            {currentTab === 'gifts' && (
+              <PackagesScreen 
+                preselectedRecipient={selectedRecipientForGifts}
+                onSelectPackage={(title) => handleOpenPlanner(title)}
+              />
+            )}
 
-        {currentTab === 'hbdays' && (
-          <DatesScreen 
-            onPlanCelebration={(item) => handleOpenPlanner(item ? item.celebrant : '')}
-            onOpenGifts={handleOpenGiftsForPerson}
-          />
-        )}
+            {currentTab === 'hbdays' && (
+              <DatesScreen 
+                onPlanCelebration={(item) => handleOpenPlanner(item ? item.celebrant : '')}
+                onOpenGifts={handleOpenGiftsForPerson}
+                onOpenSurprisePackage={handleOpenSurprisePackage}
+              />
+            )}
 
-        {currentTab === 'inbox' && (
-          <InboxScreen
-            onOpenGifts={handleOpenGiftsForPerson}
-            onOpenPlanner={handleOpenPlanner}
-          />
-        )}
+            {currentTab === 'inbox' && (
+              <InboxScreen
+                onOpenGifts={handleOpenGiftsForPerson}
+                onOpenPlanner={handleOpenPlanner}
+                onOpenSurprisePackage={handleOpenSurprisePackage}
+              />
+            )}
 
-        {currentTab === 'profile' && (
-          <ProfileScreen 
-            onOpenPlanner={() => handleOpenPlanner('')}
-          />
+            {currentTab === 'profile' && (
+              <ProfileScreen 
+                onOpenPlanner={() => handleOpenPlanner('')}
+              />
+            )}
+          </>
         )}
       </View>
 
@@ -177,25 +231,25 @@ function MainApp() {
         { 
           backgroundColor: colors.bottomNavBg, 
           borderTopColor: colors.bottomNavBorder,
-          paddingBottom: Math.max(insets.bottom, 10),
-          height: 56 + Math.max(insets.bottom, 10)
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+          paddingTop: 8,
         }
       ]}>
         {/* Tab 1: Home */}
         <TouchableOpacity 
           style={styles.navItem} 
-          onPress={() => setCurrentTab('home')}
+          onPress={() => { setIsSurpriseActive(false); setCurrentTab('home'); }}
           activeOpacity={0.7}
         >
-          <Feather 
+          <AppIcon 
             name="home" 
-            size={21} 
-            color={currentTab === 'home' ? colors.purple : colors.muted} 
+            size={22} 
+            color={!isSurpriseActive && currentTab === 'home' ? activeColor : inactiveColor} 
           />
           <Text style={[
             styles.navText, 
-            { color: currentTab === 'home' ? colors.purple : colors.muted },
-            currentTab === 'home' && styles.navTextActive
+            { color: !isSurpriseActive && currentTab === 'home' ? activeColor : inactiveColor },
+            !isSurpriseActive && currentTab === 'home' && styles.navTextActive
           ]}>
             Home
           </Text>
@@ -204,18 +258,18 @@ function MainApp() {
         {/* Tab 2: Gifts */}
         <TouchableOpacity 
           style={styles.navItem} 
-          onPress={() => setCurrentTab('gifts')}
+          onPress={() => { setIsSurpriseActive(false); setCurrentTab('gifts'); }}
           activeOpacity={0.7}
         >
-          <Feather 
+          <AppIcon 
             name="gift" 
-            size={21} 
-            color={currentTab === 'gifts' ? colors.purple : colors.muted} 
+            size={22} 
+            color={!isSurpriseActive && currentTab === 'gifts' ? activeColor : inactiveColor} 
           />
           <Text style={[
             styles.navText, 
-            { color: currentTab === 'gifts' ? colors.purple : colors.muted },
-            currentTab === 'gifts' && styles.navTextActive
+            { color: !isSurpriseActive && currentTab === 'gifts' ? activeColor : inactiveColor },
+            !isSurpriseActive && currentTab === 'gifts' && styles.navTextActive
           ]}>
             Gifts
           </Text>
@@ -224,18 +278,18 @@ function MainApp() {
         {/* Tab 3: HBDays */}
         <TouchableOpacity 
           style={styles.navItem} 
-          onPress={() => setCurrentTab('hbdays')}
+          onPress={() => { setIsSurpriseActive(false); setCurrentTab('hbdays'); }}
           activeOpacity={0.7}
         >
-          <Feather 
+          <AppIcon 
             name="calendar" 
-            size={21} 
-            color={currentTab === 'hbdays' ? colors.purple : colors.muted} 
+            size={22} 
+            color={!isSurpriseActive && currentTab === 'hbdays' ? activeColor : inactiveColor} 
           />
           <Text style={[
             styles.navText, 
-            { color: currentTab === 'hbdays' ? colors.purple : colors.muted },
-            currentTab === 'hbdays' && styles.navTextActive
+            { color: !isSurpriseActive && currentTab === 'hbdays' ? activeColor : inactiveColor },
+            !isSurpriseActive && currentTab === 'hbdays' && styles.navTextActive
           ]}>
             HBDays
           </Text>
@@ -244,22 +298,22 @@ function MainApp() {
         {/* Tab 4: Inbox */}
         <TouchableOpacity 
           style={styles.navItem} 
-          onPress={() => setCurrentTab('inbox')}
+          onPress={() => { setIsSurpriseActive(false); setCurrentTab('inbox'); }}
           activeOpacity={0.7}
         >
           <View style={styles.inboxIconWrap}>
-            <Feather 
+            <AppIcon 
               name="message-square" 
-              size={21} 
-              color={currentTab === 'inbox' ? colors.purple : colors.muted} 
+              size={22} 
+              color={!isSurpriseActive && currentTab === 'inbox' ? activeColor : inactiveColor} 
             />
             {/* Unread activity dot */}
             <View style={[styles.unreadDot, { backgroundColor: colors.coral }]} />
           </View>
           <Text style={[
             styles.navText, 
-            { color: currentTab === 'inbox' ? colors.purple : colors.muted },
-            currentTab === 'inbox' && styles.navTextActive
+            { color: !isSurpriseActive && currentTab === 'inbox' ? activeColor : inactiveColor },
+            !isSurpriseActive && currentTab === 'inbox' && styles.navTextActive
           ]}>
             Inbox
           </Text>
@@ -268,18 +322,18 @@ function MainApp() {
         {/* Tab 5: Profile */}
         <TouchableOpacity 
           style={styles.navItem} 
-          onPress={() => setCurrentTab('profile')}
+          onPress={() => { setIsSurpriseActive(false); setCurrentTab('profile'); }}
           activeOpacity={0.7}
         >
-          <Feather 
+          <AppIcon 
             name="user" 
-            size={21} 
-            color={currentTab === 'profile' ? colors.purple : colors.muted} 
+            size={22} 
+            color={!isSurpriseActive && currentTab === 'profile' ? activeColor : inactiveColor} 
           />
           <Text style={[
             styles.navText, 
-            { color: currentTab === 'profile' ? colors.purple : colors.muted },
-            currentTab === 'profile' && styles.navTextActive
+            { color: !isSurpriseActive && currentTab === 'profile' ? activeColor : inactiveColor },
+            !isSurpriseActive && currentTab === 'profile' && styles.navTextActive
           ]}>
             Profile
           </Text>
@@ -292,12 +346,16 @@ function MainApp() {
         onClose={() => setIsPlannerOpen(false)}
         initialCelebrant={plannerCelebrant}
       />
+
+      {/* Celebration Passport Sign In & Sign Up Modal */}
+      <AuthModalScreen />
     </View>
   );
 }
 
 export default function App() {
   const [fontsLoaded] = useFonts({
+    ...(Feather.font || {}),
     'Poppins-Medium': Poppins_500Medium,
     'Poppins-SemiBold': Poppins_600SemiBold,
     'Poppins-Bold': Poppins_700Bold,
@@ -320,7 +378,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <MainApp />
+        <AuthProvider>
+          <MainApp />
+        </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
@@ -328,6 +388,11 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    height: '100%',
+    position: 'relative',
+  },
+  activeScreenContainer: {
     flex: 1,
   },
   loadingContainer: {
@@ -344,15 +409,21 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 8,
+    zIndex: 999,
   },
   navItem: {
     alignItems: 'center',
+    justifyContent: 'center',
     minWidth: 54,
+    paddingVertical: 3,
   },
   inboxIconWrap: {
     position: 'relative',
@@ -361,16 +432,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -4,
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   navText: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontFamily: 'Inter-Medium',
-    marginTop: 2,
+    marginTop: 3,
   },
   navTextActive: {
     fontFamily: 'Inter-Bold',
+    fontWeight: '800',
   },
 });

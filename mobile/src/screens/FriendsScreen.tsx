@@ -8,8 +8,11 @@ import {
   SafeAreaView,
   TextInput,
   Image,
-  Alert
+  Alert,
+  Platform,
+  StatusBar
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { HBD_THEME } from '../theme';
 import { ScreenLayout } from '../components/ScreenLayout';
@@ -93,6 +96,8 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
   onOpenGiftsForFriend,
   onOpenPlannerForFriend
 }) => {
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44);
   const [people, setPeople] = useState<FriendProfile[]>(INITIAL_PEOPLE);
   const [activeTab, setActiveTab] = useState<'FRIENDS' | 'REQUESTS' | 'FIND'>('FRIENDS');
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,8 +125,11 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
   };
 
   return (
-    <ScreenLayout safeTop safeBottom={false}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1, backgroundColor: HBD_THEME.colors.background }}>
+      <ScrollView 
+        contentContainerStyle={[styles.scroll, { paddingTop: topInset + 10, paddingBottom: 120 }]} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.kickerPill}>
@@ -301,7 +309,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
           </View>
         )}
       </ScrollView>
-    </ScreenLayout>
+    </View>
   );
 };
 
