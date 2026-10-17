@@ -1,4 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Platform } from 'react-native';
+
+const API_BASE = Platform.select({
+  android: 'http://10.0.2.2:4000/api',
+  default: 'http://localhost:4000/api'
+});
 
 export interface MobileUser {
   id: string;
@@ -114,6 +120,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (identifier: string): boolean => {
     const clean = identifier.trim().toLowerCase().replace(/^@/, '');
+
+    // Synchronize with backend API
+    fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.user) {
+          const u: MobileUser = {
+            id: data.user.id,
+            handle: data.user.handle,
+            fullName: data.user.fullName,
+            avatarUrl: data.user.avatarUrl,
+            city: data.user.city,
+            country: data.user.country,
+            birthDay: data.user.birthDay,
+            birthMonth: data.user.birthMonth,
+            birthYear: data.user.birthYear,
+            bio: data.user.bio,
+            isVerifiedCivil: data.user.isVerified,
+            wishlist: data.user.preferences?.interests || ['Specialty Coffee', 'Books'],
+            avoidList: data.user.preferences?.avoid || ['None'],
+            idols: data.user.preferences?.idols || ['Nelson Mandela'],
+            musicGenres: data.user.preferences?.musicGenres || ['Afrobeats'],
+            animalTypes: data.user.preferences?.animalTypes || ['Dogs'],
+            hobbies: data.user.preferences?.hobbies || ['Tech & Coding'],
+            personalGoals: data.user.preferences?.personalGoals || ['Make Every Day Joyful'],
+            traditions: data.user.traditions || ['Universal Secular'],
+            showTributes: data.user.showTributes !== undefined ? data.user.showTributes : true
+          };
+          setUser(u);
+        }
+      })
+      .catch(err => {
+        console.warn('[Mobile Auth] Backend offline, using local verification:', err);
+      });
+
     const found = DEMO_MOBILE_USERS.find(
       u => u.handle.toLowerCase() === clean || u.fullName.toLowerCase().includes(clean)
     );
@@ -154,9 +199,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = (userData: Partial<MobileUser>): MobileUser => {
+    const cleanHandle = (userData.handle || 'celebrant').replace(/^@/, '');
     const newUser: MobileUser = {
       id: `u-${Date.now()}`,
-      handle: (userData.handle || 'celebrant').replace(/^@/, ''),
+      handle: cleanHandle,
       fullName: userData.fullName || 'New Celebrant',
       avatarUrl: userData.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
       city: userData.city || 'London',
@@ -178,10 +224,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setUser(newUser);
     setIsAuthModalVisible(false);
+
+    // Call backend API
+    fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        handle: newUser.handle,
+        fullName: newUser.fullName,
+        avatarUrl: newUser.avatarUrl,
+        city: newUser.city,
+        country: newUser.country,
+        birthDay: newUser.birthDay,
+        birthMonth: newUser.birthMonth,
+        birthYear: newUser.birthYear,
+        bio: newUser.bio,
+        traditions: newUser.traditions,
+        showTributes: newUser.showTributes,
+        preferences: {
+          interests: newUser.wishlist,
+          avoid: newUser.avoidList,
+          idols: newUser.idols,
+          musicGenres: newUser.musicGenres,
+          animalTypes: newUser.animalTypes,
+          hobbies: newUser.hobbies,
+          personalGoals: newUser.personalGoals
+        }
+      })
+    }).catch(err => {
+      console.warn('[Mobile Auth] Backend sync deferred:', err);
+    });
+
     return newUser;
   };
 
   const logout = () => {
+    fetch(`${API_BASE}/auth/logout`, { method: 'POST' }).catch(() => {});
     setUser(null);
     setAuthModalMode('login');
     setIsAuthModalVisible(true);

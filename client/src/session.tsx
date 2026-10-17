@@ -19,6 +19,8 @@ interface StoredAccount {
 
 const ACCOUNT_KEY = 'hbd.account.v1';
 const SESSION_KEY = 'hbd.session.v1';
+const TOKEN_KEY = 'hbd.token.v1';
+const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api';
 
 const DEFAULT_ACCOUNT: StoredAccount = {
   profile: {
@@ -93,6 +95,48 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | undefined>(undefined);
 
+  // Sync with backend API on mount if a bearer token exists
+  useEffect(() => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) {
+      fetch(`${API_BASE}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.user) {
+            setAccount(prev => {
+              const friendships = prev ? prev.friendships : initialFriendships;
+              const following = prev ? prev.following : [];
+              return {
+                profile: {
+                  id: data.user.id,
+                  handle: data.user.handle,
+                  fullName: data.user.fullName,
+                  avatarUrl: data.user.avatarUrl,
+                  city: data.user.city,
+                  country: data.user.country,
+                  birthDay: data.user.birthDay,
+                  birthMonth: data.user.birthMonth,
+                  birthYear: data.user.birthYear,
+                  bio: data.user.bio,
+                  isVerified: data.user.isVerified,
+                  preferences: data.user.preferences || {},
+                  privacy: data.user.privacy || { birthdayVisibility: 'EVERYONE', showAge: false, preferencesVisibleToFriends: true }
+                },
+                friendships,
+                following
+              };
+            });
+            setIsLoggedIn(true);
+          }
+        })
+        .catch(() => {
+          // Offline fallback: localStorage account remains active
+        });
+    }
+  }, []);
+
   // Persist account + session flag
   useEffect(() => {
     if (account) localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
@@ -140,10 +184,75 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoggedIn(true);
     addedContactIds.forEach((id, i) => simulateAcceptance(id, 2500 + i * 1500));
     showToast(`Welcome to HBD, ${profile.fullName.split(' ')[0]}! 🎂`);
+
+    // Asynchronously register with backend server
+    fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        handle: profile.handle,
+        fullName: profile.fullName,
+        avatarUrl: profile.avatarUrl,
+        city: profile.city,
+        country: profile.country,
+        birthDay: profile.birthDay,
+        birthMonth: profile.birthMonth,
+        birthYear: profile.birthYear,
+        bio: profile.bio,
+        preferences: profile.preferences,
+        privacy: profile.privacy,
+        traditions: profile.preferences?.traditions,
+        showTributes: profile.preferences?.showTributes
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.token) {
+          localStorage.setItem(TOKEN_KEY, data.token);
+        }
+      })
+      .catch(err => {
+        console.warn('[HBD Session] Backend sync deferred (offline mode):', err);
+      });
   }, [simulateAcceptance, showToast]);
 
   const logIn = useCallback((contactOrHandle: string) => {
     const q = contactOrHandle.trim().toLowerCase().replace(/^@/, '');
+
+    // Attempt backend server authentication
+    fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: contactOrHandle })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.user) {
+          if (data.token) localStorage.setItem(TOKEN_KEY, data.token);
+          const serverProfile: HBDProfile = {
+            id: data.user.id,
+            handle: data.user.handle,
+            fullName: data.user.fullName,
+            avatarUrl: data.user.avatarUrl,
+            city: data.user.city,
+            country: data.user.country,
+            birthDay: data.user.birthDay,
+            birthMonth: data.user.birthMonth,
+            birthYear: data.user.birthYear,
+            bio: data.user.bio,
+            isVerified: data.user.isVerified,
+            preferences: data.user.preferences || {},
+            privacy: data.user.privacy || { birthdayVisibility: 'EVERYONE', showAge: false, preferencesVisibleToFriends: true }
+          };
+          setAccount({ profile: serverProfile, friendships: initialFriendships, following: [] });
+          setIsLoggedIn(true);
+          showToast(`Welcome back, ${serverProfile.fullName.split(' ')[0]}! 🎉`);
+        }
+      })
+      .catch(err => {
+        console.warn('[HBD Session] Backend offline, using local verification:', err);
+      });
+
     const acc = loadAccount();
     if (acc) {
       const matchContact = acc.profile.contact?.trim().toLowerCase() === q;
@@ -167,17 +276,36 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return true;
     }
 
-    showToast(`No account found for "${contactOrHandle}". Try signing up!`);
-    return false;
+    showToast(`Signing in as @${q}...`);
+    return true;
   }, [showToast]);
 
   const logOut = useCallback(() => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) {
+      fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(() => {});
+      localStorage.removeItem(TOKEN_KEY);
+    }
     setIsLoggedIn(false);
     showToast('You are logged out');
   }, [showToast]);
 
   const updateProfile = useCallback((patch: Partial<HBDProfile>) => {
     setAccount(prev => (prev ? { ...prev, profile: { ...prev.profile, ...patch } } : prev));
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) {
+      fetch(`${API_BASE}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(patch)
+      }).catch(() => {});
+    }
   }, []);
 
   const sendFriendRequest = useCallback((userId: string) => {

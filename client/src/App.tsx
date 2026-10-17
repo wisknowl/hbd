@@ -20,15 +20,90 @@ import { useSession } from './session';
 import { mockReels, mockPackages } from './mockData';
 import type { ReelPost, CelebrationCategory, PersonCircleMember } from '../../shared/types';
 
+const VALID_VIEWS: Record<string, NavViewType> = {
+  '': 'explore',
+  'explore': 'explore',
+  'foryou': 'foryou',
+  'feed': 'foryou',
+  'hbdays': 'hbdays',
+  'dates': 'hbdays',
+  'calendar': 'hbdays',
+  'gifts': 'gifts',
+  'messages': 'messages',
+  'inbox': 'messages',
+  'friends': 'friends',
+  'profile': 'profile',
+  'rooms': 'rooms',
+  'packages': 'packages',
+  'vault': 'vault',
+  'surprisepackage': 'surprisepackage',
+  'surprise': 'surprisepackage'
+};
+
+function getRouteFromLocation(): { view: NavViewType; celebrant?: string } {
+  if (typeof window === 'undefined') return { view: 'explore' };
+  const rawPath = window.location.pathname.replace(/^\/+/, '').split('/')[0].toLowerCase();
+  const searchParams = new URLSearchParams(window.location.search);
+  const celebrant = searchParams.get('celebrant') || undefined;
+  const view = VALID_VIEWS[rawPath] || 'explore';
+  return { view, celebrant };
+}
+
 export const App: React.FC = () => {
   const { profile } = useSession();
-  // Default landing page is Explore
-  const [activeView, setActiveView] = useState<NavViewType>('explore');
+  
+  // URL-driven navigation state
+  const initialRoute = getRouteFromLocation();
+  const [activeView, setActiveView] = useState<NavViewType>(initialRoute.view);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [reels, setReels] = useState<ReelPost[]>(mockReels);
   const [selectedPersonForGifts, setSelectedPersonForGifts] = useState<PersonCircleMember | null>(null);
-  const [selectedCelebrantForSurprise, setSelectedCelebrantForSurprise] = useState<string | undefined>(undefined);
+  const [selectedCelebrantForSurprise, setSelectedCelebrantForSurprise] = useState<string | undefined>(initialRoute.celebrant);
+
+  // Synchronize browser history and URL bar with navigation
+  const navigateTo = React.useCallback((view: NavViewType, options?: { celebrant?: string; replace?: boolean }) => {
+    setActiveView(view);
+    if (options?.celebrant !== undefined) {
+      setSelectedCelebrantForSurprise(options.celebrant);
+    }
+
+    const path = view === 'explore' ? '/' : `/${view}`;
+    const params = new URLSearchParams();
+    if (options?.celebrant) {
+      params.set('celebrant', options.celebrant);
+    }
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const targetUrl = `${path}${queryString}`;
+
+    if (options?.replace) {
+      window.history.replaceState({ view }, '', targetUrl);
+    } else if (window.location.pathname + window.location.search !== targetUrl) {
+      window.history.pushState({ view }, '', targetUrl);
+    }
+  }, []);
+
+  // Listen to browser Back and Forward button events
+  useEffect(() => {
+    const handlePopState = () => {
+      const { view, celebrant } = getRouteFromLocation();
+      setActiveView(view);
+      if (celebrant) {
+        setSelectedCelebrantForSurprise(celebrant);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Ensure initial deep-link clean sync if path was root
+  useEffect(() => {
+    const { view } = getRouteFromLocation();
+    if (view !== 'explore' && window.location.pathname === '/') {
+      window.history.replaceState({ view }, '', `/${view}`);
+    }
+  }, []);
 
   // Activity drawer & Mobile companion modal states
   const [isActivityOpen, setIsActivityOpen] = useState(false);
@@ -72,12 +147,12 @@ export const App: React.FC = () => {
 
   const handleSelectReelFromExplore = (selected: ReelPost) => {
     setReels(prev => [selected, ...prev.filter(r => r.id !== selected.id)]);
-    setActiveView('foryou');
+    navigateTo('foryou');
   };
 
   const handleOpenGiftsForPerson = (person: PersonCircleMember) => {
     setSelectedPersonForGifts(person);
-    setActiveView('gifts');
+    navigateTo('gifts');
   };
 
   const handleSearch = (query: string) => {
@@ -89,7 +164,7 @@ export const App: React.FC = () => {
         r.category.toLowerCase().includes(q)
       );
       setReels(filtered.length ? filtered : mockReels);
-      setActiveView('explore');
+      navigateTo('explore');
     } else {
       setReels(mockReels);
     }
@@ -105,7 +180,7 @@ export const App: React.FC = () => {
     }}>
       {!profile ? (
         <div style={{ width: '100%', height: '100%' }}>
-          <OnboardingView onComplete={() => setActiveView('explore')} />
+          <OnboardingView onComplete={() => navigateTo('explore')} />
         </div>
       ) : (
         <>
@@ -114,7 +189,7 @@ export const App: React.FC = () => {
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={toggleSidebarCollapse}
         activeView={activeView}
-        setActiveView={setActiveView}
+        setActiveView={navigateTo}
         onSearch={handleSearch}
         openPlanner={() => handleOpenPlanner('BIRTHDAY', '')}
         isDark={isDark}
@@ -127,7 +202,7 @@ export const App: React.FC = () => {
       <TopFloatingBar
         onToggleActivity={() => setIsActivityOpen(prev => !prev)}
         onOpenMobileModal={() => setIsMobileModalOpen(true)}
-        onOpenProfile={() => setActiveView('profile')}
+        onOpenProfile={() => navigateTo('profile')}
         isActivityOpen={isActivityOpen}
         unreadCount={3}
       />
@@ -138,9 +213,9 @@ export const App: React.FC = () => {
         onClose={() => setIsActivityOpen(false)}
         isSidebarCollapsed={isSidebarCollapsed}
         onOpenPlanner={(celebrant) => handleOpenPlanner('BIRTHDAY', celebrant || '')}
-        onNavigateToGifts={() => setActiveView('gifts')}
-        onNavigateToMessages={() => setActiveView('messages')}
-        onNavigateToVault={() => setActiveView('vault')}
+        onNavigateToGifts={() => navigateTo('gifts')}
+        onNavigateToMessages={() => navigateTo('messages')}
+        onNavigateToVault={() => navigateTo('vault')}
       />
 
       {/* Main Full-Height Content Area */}
@@ -165,8 +240,7 @@ export const App: React.FC = () => {
             onPlanCelebration={(cat, name) => handleOpenPlanner(cat, name)}
             onOpenGiftsForPerson={handleOpenGiftsForPerson}
             onOpenSurprisePackage={(celebrant) => {
-              setSelectedCelebrantForSurprise(celebrant);
-              setActiveView('surprisepackage');
+              navigateTo('surprisepackage', { celebrant });
             }}
           />
         )}
@@ -174,14 +248,14 @@ export const App: React.FC = () => {
         {activeView === 'surprisepackage' && (
           <SurprisePackageView
             preselectedCelebrant={selectedCelebrantForSurprise}
-            onBackToDates={() => setActiveView('hbdays')}
+            onBackToDates={() => navigateTo('hbdays')}
           />
         )}
 
         {(activeView === 'messages' || activeView === 'inbox') && (
           <MessagesView 
             onOpenPlanner={(name) => handleOpenPlanner('BIRTHDAY', name || '')}
-            onOpenGifts={() => setActiveView('gifts')}
+            onOpenGifts={() => navigateTo('gifts')}
           />
         )}
 
@@ -192,7 +266,7 @@ export const App: React.FC = () => {
         {activeView === 'profile' && (
           <ProfileView 
             onOpenPlanner={() => handleOpenPlanner('BIRTHDAY', '')}
-            onNavigateToFriends={() => setActiveView('friends')}
+            onNavigateToFriends={() => navigateTo('friends')}
           />
         )}
 
@@ -206,7 +280,7 @@ export const App: React.FC = () => {
         {activeView === 'rooms' && (
           <CelebrationRoomsView
             onPlanCelebration={() => handleOpenPlanner('BIRTHDAY', '')}
-            onViewVault={() => setActiveView('vault')}
+            onViewVault={() => navigateTo('vault')}
           />
         )}
 
