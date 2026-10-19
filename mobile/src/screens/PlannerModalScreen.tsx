@@ -7,13 +7,12 @@ import {
   TouchableOpacity, 
   TextInput,
   Modal, 
-  SafeAreaView, 
   Linking, 
   Alert,
   Platform,
   StatusBar
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { HBD_THEME } from '../theme';
 import type { CelebrationCategory, PackageTier } from '../../../shared/types';

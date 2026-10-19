@@ -7,11 +7,10 @@ import {
   Dimensions, 
   Image, 
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Platform
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { HBD_THEME } from '../theme';
 import type { ReelPost, CelebrationCategory } from '../../../shared/types';

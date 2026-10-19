@@ -69,9 +69,9 @@ interface SessionContextValue {
   toast: string | null;
 
   statusOf: (userId: string) => FriendshipStatus;
-  completeSignUp: (profile: HBDProfile, addedContactIds: string[]) => void;
-  login: (profile: HBDProfile) => void;
-  logIn: (contact: string) => boolean;
+  completeSignUp: (profile: HBDProfile, addedContactIds: string[], password?: string) => Promise<void> | void;
+  login: (profile: HBDProfile, password?: string) => void;
+  logIn: (contact: string, password?: string) => Promise<boolean> | boolean;
   logOut: () => void;
   updateProfile: (patch: Partial<HBDProfile>) => void;
 
@@ -177,7 +177,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, delayMs);
   }, [showToast]);
 
-  const completeSignUp = useCallback((profile: HBDProfile, addedContactIds: string[]) => {
+  const completeSignUp = useCallback(async (profile: HBDProfile, addedContactIds: string[], password?: string) => {
     const friendships: Record<string, FriendshipStatus> = { ...initialFriendships };
     addedContactIds.forEach(id => { friendships[id] = 'REQUEST_SENT'; });
     setAccount({ profile, friendships, following: ['u-aisha'] });
@@ -185,74 +185,79 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addedContactIds.forEach((id, i) => simulateAcceptance(id, 2500 + i * 1500));
     showToast(`Welcome to HBD, ${profile.fullName.split(' ')[0]}! 🎂`);
 
-    // Asynchronously register with backend server
-    fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        handle: profile.handle,
-        fullName: profile.fullName,
-        avatarUrl: profile.avatarUrl,
-        city: profile.city,
-        country: profile.country,
-        birthDay: profile.birthDay,
-        birthMonth: profile.birthMonth,
-        birthYear: profile.birthYear,
-        bio: profile.bio,
-        preferences: profile.preferences,
-        privacy: profile.privacy,
-        traditions: profile.preferences?.traditions,
-        showTributes: profile.preferences?.showTributes
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data?.token) {
-          localStorage.setItem(TOKEN_KEY, data.token);
-        }
-      })
-      .catch(err => {
-        console.warn('[HBD Session] Backend sync deferred (offline mode):', err);
+    // Register with PostgreSQL backend server
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          handle: profile.handle,
+          fullName: profile.fullName,
+          email: profile.contact || `${profile.handle}@hbd.me`,
+          password: password || 'password123',
+          avatarUrl: profile.avatarUrl,
+          city: profile.city,
+          country: profile.country,
+          birthDay: profile.birthDay,
+          birthMonth: profile.birthMonth,
+          birthYear: profile.birthYear,
+          bio: profile.bio,
+          preferences: profile.preferences,
+          privacy: profile.privacy,
+          traditions: profile.preferences?.traditions,
+          showTributes: profile.preferences?.showTributes
+        })
       });
+      const data = await res.json();
+      if (data?.token) {
+        localStorage.setItem(TOKEN_KEY, data.token);
+      }
+    } catch (err) {
+      console.warn('[HBD Session] Backend sync deferred (offline mode):', err);
+    }
   }, [simulateAcceptance, showToast]);
 
-  const logIn = useCallback((contactOrHandle: string) => {
+  const logIn = useCallback(async (contactOrHandle: string, password?: string) => {
     const q = contactOrHandle.trim().toLowerCase().replace(/^@/, '');
 
-    // Attempt backend server authentication
-    fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier: contactOrHandle })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.user) {
-          if (data.token) localStorage.setItem(TOKEN_KEY, data.token);
-          const serverProfile: HBDProfile = {
-            id: data.user.id,
-            handle: data.user.handle,
-            fullName: data.user.fullName,
-            avatarUrl: data.user.avatarUrl,
-            city: data.user.city,
-            country: data.user.country,
-            birthDay: data.user.birthDay,
-            birthMonth: data.user.birthMonth,
-            birthYear: data.user.birthYear,
-            bio: data.user.bio,
-            isVerified: data.user.isVerified,
-            preferences: data.user.preferences || {},
-            privacy: data.user.privacy || { birthdayVisibility: 'EVERYONE', showAge: false, preferencesVisibleToFriends: true }
-          };
-          setAccount({ profile: serverProfile, friendships: initialFriendships, following: [] });
-          setIsLoggedIn(true);
-          showToast(`Welcome back, ${serverProfile.fullName.split(' ')[0]}! 🎉`);
-        }
-      })
-      .catch(err => {
-        console.warn('[HBD Session] Backend offline, using local verification:', err);
+    // 1. Attempt real PostgreSQL backend server authentication
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: contactOrHandle, password })
       });
+      const data = await res.json();
+      if (data.success && data.user) {
+        if (data.token) localStorage.setItem(TOKEN_KEY, data.token);
+        const serverProfile: HBDProfile = {
+          id: data.user.id,
+          handle: data.user.handle,
+          fullName: data.user.fullName,
+          avatarUrl: data.user.avatarUrl,
+          city: data.user.city,
+          country: data.user.country,
+          birthDay: data.user.birthDay,
+          birthMonth: data.user.birthMonth,
+          birthYear: data.user.birthYear,
+          bio: data.user.bio,
+          isVerified: data.user.isVerified,
+          preferences: data.user.preferences || {},
+          privacy: data.user.privacy || { birthdayVisibility: 'EVERYONE', showAge: false, preferencesVisibleToFriends: true }
+        };
+        setAccount({ profile: serverProfile, friendships: initialFriendships, following: [] });
+        setIsLoggedIn(true);
+        showToast(`Welcome back, ${serverProfile.fullName.split(' ')[0]}! 🎉`);
+        return true;
+      } else if (data.error) {
+        showToast(`⚠️ ${data.error}`);
+        return false;
+      }
+    } catch (err) {
+      console.warn('[HBD Session] Backend offline, using local verification fallback:', err);
+    }
 
+    // 2. Offline fallback to local accounts if backend is temporarily unreachable
     const acc = loadAccount();
     if (acc) {
       const matchContact = acc.profile.contact?.trim().toLowerCase() === q;
@@ -266,7 +271,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     }
 
-    // Also support logging in as any of the mock profiles for testing
     const mock = mockPeople.find(p => p.handle.toLowerCase() === q || p.fullName.toLowerCase().includes(q));
     if (mock) {
       const demoAccount: StoredAccount = { profile: mock, friendships: initialFriendships, following: [] };

@@ -55,10 +55,25 @@ model User {
   bio             String?
   countryCode     String?       @default("CM")
   phoneNumber     String?
+  passwordHash    String?
+  city            String?       @default("London")
+  country         String?       @default("United Kingdom")
+  birthDay        Int?          @default(24)
+  birthMonth      Int?          @default(10)
+  birthYear       Int?          @default(1996)
   birthDate       DateTime?
   isVerified      Boolean       @default(false)
   traditions      String[]      @default([])
   showTributes    Boolean       @default(true)
+  wishlist        String[]      @default([])
+  avoidList       String[]      @default([])
+  idols           String[]      @default([])
+  musicGenres     String[]      @default([])
+  animalTypes     String[]      @default([])
+  hobbies         String[]      @default([])
+  personalGoals   String[]      @default([])
+  preferences     Json?
+  privacy         Json?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -73,6 +88,10 @@ model User {
   // Social Graph
   followers       Follow[]      @relation("UserFollowers")
   following       Follow[]      @relation("UserFollowing")
+
+  // Gifting Engine
+  giftsGiven      GiftOrder[]   @relation("GiftsGiven")
+  giftsReceived   GiftOrder[]   @relation("GiftsReceived")
 
   @@index([handle])
   @@index([email])
@@ -357,4 +376,207 @@ model EventOccurrence {
   @@unique([eventId, year])
   @@index([year, month, day])
 }
+
+// =============================================================
+// Universal Gifting Engine & Merchant Partner Models
+// =============================================================
+
+enum MerchantCategory {
+  GLOBAL_ECOMMERCE
+  REGIONAL_ECOMMERCE
+  PHYSICAL_PARTNER
+  GIFTCARD_AGGREGATOR
+  HUMANITARIAN_PARTNER
+  TELCO_AGGREGATOR
+}
+
+enum GiftCategory {
+  FLOWERS
+  CAKE
+  TECH
+  FASHION
+  FRAGRANCE
+  EXPERIENCE
+  DIGITAL
+  HUMANITARIAN
+  CONNECTIVITY
+  TRIBUTE
+}
+
+enum FulfillmentType {
+  EMOTIONAL_TRIBUTE       // 100% Universal: Voice, Video, Letters, Memory Capsule (Active in every country on Earth)
+  HUMANITARIAN_MILESTONE  // Universal impact: HBD Gives celebratory meal, emergency aid, clean water in celebrant's honor
+  MOBILE_CONNECTIVITY     // 160+ countries: Airtime, SMS, and data bundle top-up
+  GIFTCARD_BRAND          // Digital closed-loop gift cards (Amazon, Apple, Spotify, Uber)
+  GIFTCARD_OPEN_LOOP      // Virtual Visa / Mastercard spendable globally online
+  NATIVE_ESCROW           // Handcrafted local delivery (Douala, Lagos, Nairobi) held in HBD escrow
+  AFFILIATE_REDIRECT      // Direct outbound links to Amazon, Jumia, etc.
+}
+
+enum GiftOrderStatus {
+  ESCROWED
+  AWAITING_RECIPIENT
+  CONFIRMED
+  DISPATCHED
+  DELIVERED
+  REDEEMED
+  CANCELLED
+}
+
+enum GiftDeliveryType {
+  SHIPPING
+  STORE_PICKUP_QR
+  DIGITAL
+  INSTANT_DIGITAL_CODE
+  AIRTIME_RECHARGE
+  HUMANITARIAN_IMPACT
+}
+
+model CountryRoute {
+  id                    String            @id @default(uuid())
+  countryCode           String            @unique // ISO 2-letter (e.g. "CM", "NG", "UA", "SD", "SY", "US", "GLOBAL")
+  countryName           String
+  region                String            // "AFRICA", "EUROPE", "AMERICAS", "CONFLICT_OR_FRONTIER", "GLOBAL"
+  primaryCurrency       String            @default("USD")
+  allowedFulfillment    FulfillmentType[]
+  isConflictOrCrisisZone Boolean          @default(false)
+  supportNote           String?           // e.g. "Emotional first reach & humanitarian milestone support enabled"
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([countryCode])
+  @@index([region])
+}
+
+model MerchantPartner {
+  id                  String             @id @default(uuid())
+  slug                String             @unique
+  name                String
+  category            MerchantCategory   @default(GLOBAL_ECOMMERCE)
+  logoUrl             String?
+  description         String?            @db.Text
+  supportedCountries  String[]           @default(["GLOBAL"])
+  supportedCurrencies String[]           @default(["USD"])
+  commissionRate      Decimal            @default(0.10) @db.Decimal(5, 4)
+  isActive            Boolean            @default(true)
+  isVerified          Boolean            @default(true)
+  posSecretKey        String?            // For physical store QR scanner verification
+  physicalAddress     String?
+  city                String?
+  country             String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  items               GiftCatalogItem[]
+  orders              GiftOrder[]
+
+  @@index([slug])
+  @@index([category])
+}
+
+model GiftCatalogItem {
+  id                    String             @id @default(uuid())
+  merchantId            String
+  sku                   String             @unique
+  title                 String
+  description           String?            @db.Text
+  category              GiftCategory       @default(TECH)
+  fulfillmentType       FulfillmentType    @default(GIFTCARD_BRAND)
+  brandSlug             String?
+  countryCode           String             @default("GLOBAL")
+  denominationType      String             @default("FIXED") // FIXED | VARIABLE
+  minAmount             Decimal?           @db.Decimal(10, 2)
+  maxAmount             Decimal?           @db.Decimal(10, 2)
+  humanitarianCause     String?            // e.g. "Celebration Meal for Orphanage", "Emergency Aid"
+  price                 Decimal            @db.Decimal(10, 2)
+  currency              String             @default("USD")
+  imageUrl              String
+  externalUrl           String?
+  isPhysicalStore       Boolean            @default(false)
+  deliveryScope         String             @default("GLOBAL")
+  inStock               Boolean            @default(true)
+  rating                Decimal?           @default(4.9) @db.Decimal(2, 1)
+  estimatedDeliveryDays Int                @default(3)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  merchant              MerchantPartner    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  orders                GiftOrder[]
+
+  @@index([merchantId])
+  @@index([category])
+  @@index([fulfillmentType])
+  @@index([countryCode])
+}
+
+model GiftOrder {
+  id                  String             @id @default(uuid())
+  orderNumber         String             @unique
+  giverId             String
+  recipientId         String
+  merchantId          String
+  itemId              String
+  status              GiftOrderStatus    @default(ESCROWED)
+  fulfillmentType     FulfillmentType    @default(GIFTCARD_BRAND)
+  totalAmount         Decimal            @db.Decimal(10, 2)
+  currency            String             @default("USD")
+  greetingMessage     String?            @db.Text
+  tributeMediaUrl     String?
+  deliveryType        GiftDeliveryType   @default(SHIPPING)
+
+  // Digital Gift Card & Airtime Fulfillment
+  claimCode           String?
+  claimPin            String?
+  claimUrl            String?
+
+  // Humanitarian milestone tribute certificate
+  humanitarianCertUrl String?
+
+  // Fulfillment & tracking
+  trackingNumber      String?
+  carrierName         String?
+  estimatedDelivery   DateTime?
+
+  // Physical store dynamic voucher
+  voucherCode         String?            @unique
+  voucherQrPayload    String?
+  voucherRedeemedAt   DateTime?
+  cashierNote         String?
+
+  // Recipient appreciation
+  thankYouNote        String?            @db.Text
+  thankYouMediaUrl    String?
+  thankYouEmoji       String?            @default("❤️")
+
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  giver               User               @relation("GiftsGiven", fields: [giverId], references: [id], onDelete: Cascade)
+  recipient           User               @relation("GiftsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  merchant            MerchantPartner    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  item                GiftCatalogItem    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  shippingAddress     RecipientShippingAddress?
+
+  @@index([giverId])
+  @@index([recipientId])
+  @@index([status])
+  @@index([fulfillmentType])
+  @@index([voucherCode])
+}
+
+model RecipientShippingAddress {
+  id                    String             @id @default(uuid())
+  orderId               String             @unique
+  streetAddress         String
+  city                  String
+  stateOrProvince       String?
+  postalCode            String?
+  country               String
+  deliveryInstructions  String?
+  phoneNumber           String?
+  createdAt             DateTime           @default(now())
+
+  order                 GiftOrder          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
 

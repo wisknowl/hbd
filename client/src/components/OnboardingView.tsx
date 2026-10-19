@@ -157,22 +157,22 @@ export const OnboardingView: React.FC<OnboardingProps> = ({ onComplete }) => {
     onComplete();
   };
 
-  const handleLoginSubmit = (e?: React.FormEvent) => {
+  const handleLoginSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!loginIdentifier.trim()) {
       setLoginError('Please enter your handle, name, or email.');
       return;
     }
-    const success = logIn(loginIdentifier.trim());
+    const success = await logIn(loginIdentifier.trim());
     if (success) {
       onComplete();
     } else {
-      setLoginError('Account not found. Select a demo profile or sign up below.');
+      setLoginError('Could not sign in with this account. Check your credentials or register below.');
     }
   };
 
-  const handleQuickLogin = (demoHandle: string) => {
-    const success = logIn(demoHandle);
+  const handleQuickLogin = async (demoHandle: string) => {
+    const success = await logIn(demoHandle);
     if (success) onComplete();
   };
 

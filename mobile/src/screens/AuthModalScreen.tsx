@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  SafeAreaView,
   Alert,
   Image,
   Platform,
@@ -15,7 +14,7 @@ import {
   Switch
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../context/ThemeContext';
 import { useAuth, DEMO_MOBILE_USERS } from '../context/AuthContext';
 
@@ -79,24 +78,24 @@ export const AuthModalScreen: React.FC = () => {
     setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
   };
 
-  const handleLoginSubmit = () => {
+  const handleLoginSubmit = async () => {
     if (!loginIdentifier.trim()) {
       Alert.alert('Required', 'Please enter your handle or full name.');
       return;
     }
-    const success = login(loginIdentifier);
+    const success = await login(loginIdentifier);
     if (!success) {
-      Alert.alert('Error', 'Could not sign in with this handle.');
+      Alert.alert('Error', 'Could not sign in with this handle. Please check your credentials.');
     }
   };
 
-  const handleSignUpComplete = () => {
+  const handleSignUpComplete = async () => {
     if (!name.trim() || !handle.trim()) {
       Alert.alert('Required', 'Please complete your civil full name and handle.');
       setStep(1);
       return;
     }
-    signUp({
+    await signUp({
       fullName: name.trim(),
       handle: handle.trim(),
       city: city.trim() || 'London',

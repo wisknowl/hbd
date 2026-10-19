@@ -5,14 +5,13 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  SafeAreaView,
   TextInput,
   Image,
   Alert,
   Platform,
   StatusBar
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { HBD_THEME } from '../theme';
 import { ScreenLayout } from '../components/ScreenLayout';

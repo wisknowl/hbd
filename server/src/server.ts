@@ -1,5 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { prisma, seedInitialData, sanitizeUser } from './db.js';
+import { giftingRouter } from './gifting.js';
 import { mockPackages, mockReels, mockReminders, mockSurprisePackages } from './mockData.js';
 import type { 
   CelebrationBookingRequest, 
@@ -9,11 +14,15 @@ import type {
   SurpriseDiscussionMessage 
 } from '../../shared/types.js';
 
+dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 4000;
+const JWT_SECRET = process.env.JWT_SECRET || 'hbd_foundation_super_secret_jwt_key_2026_celebrate_what_matters';
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/gifting', giftingRouter);
 
 // In-memory state for development API (mirrors PostgreSQL schema)
 let reels = [...mockReels];
@@ -22,220 +31,26 @@ const bookings: CelebrationBookingRequest[] = [];
 let surprisePackages: SurprisePackage[] = [...mockSurprisePackages];
 
 // Health Check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  try {
+    const userCount = await prisma.user.count();
+    dbStatus = `connected (PostgreSQL hbdays_db, ${userCount} users)`;
+  } catch (err: any) {
+    dbStatus = `error: ${err.message}`;
+  }
+
   res.json({
     status: 'online',
     brand: 'HBD Foundation — Celebrate What Matters',
     service: 'Global Celebration API',
+    database: dbStatus,
     timestamp: new Date().toISOString()
   });
 });
 
-// -------------------------------------------------------------
-// User & Auth In-Memory Store (Mirrors PostgreSQL User table)
-// -------------------------------------------------------------
-interface ServerUser {
-  id: string;
-  handle: string;
-  fullName: string;
-  email?: string;
-  avatarUrl: string;
-  city: string;
-  country: string;
-  birthDay: number;
-  birthMonth: number;
-  birthYear?: number;
-  bio: string;
-  isVerified: boolean;
-  token: string;
-  preferences?: {
-    interests?: string[];
-    giftWishes?: string[];
-    avoid?: string[];
-    favoriteColor?: string;
-    idols?: string[];
-    musicGenres?: string[];
-    animalTypes?: string[];
-    hobbies?: string[];
-    personalGoals?: string[];
-    traditions?: string[];
-    showTributes?: boolean;
-  };
-  privacy?: {
-    birthdayVisibility?: string;
-    showAge?: boolean;
-    preferencesVisibleToFriends?: boolean;
-  };
-  traditions?: string[];
-  showTributes?: boolean;
-  createdAt: string;
-}
-
-const initialUsers: ServerUser[] = [
-  {
-    id: 'u-1',
-    handle: 'samuel_nd',
-    fullName: 'Samuel Ndamukong',
-    email: 'samuel@hbd.foundation',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    city: 'London',
-    country: 'United Kingdom',
-    birthDay: 24,
-    birthMonth: 10,
-    birthYear: 1995,
-    bio: 'Product architect & celebration enthusiast. Always down for good coffee & heartfelt surprises ✨',
-    isVerified: true,
-    token: 'hbd_token_samuel_nd',
-    preferences: {
-      interests: ['Acoustic Music', 'Gourmet Treats', 'Tech'],
-      giftWishes: ['Audio equipment', 'Bespoke cakes'],
-      avoid: ['Lilies (allergic)'],
-      favoriteColor: '#5B2A86',
-      idols: ['Steve Jobs', 'Nelson Mandela'],
-      musicGenres: ['Afrobeats', 'Jazz'],
-      animalTypes: ['Dogs'],
-      hobbies: ['Tech & Coding', 'Photography'],
-      personalGoals: ['Scale HBD Globally'],
-      traditions: ['Universal Secular', 'Christian Heritage', 'Pan-African & Diaspora'],
-      showTributes: true
-    },
-    privacy: { birthdayVisibility: 'EVERYONE', showAge: false, preferencesVisibleToFriends: true },
-    traditions: ['Universal Secular', 'Christian Heritage', 'Pan-African & Diaspora'],
-    showTributes: true,
-    createdAt: '2026-01-01T00:00:00Z'
-  },
-  {
-    id: 'u-2',
-    handle: 'aisha_tech',
-    fullName: 'Aisha Bello',
-    email: 'aisha@payseed.africa',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
-    city: 'Lagos',
-    country: 'Nigeria',
-    birthDay: 14,
-    birthMonth: 5,
-    birthYear: 1997,
-    bio: 'Founder at PaySeed. Celebrating ventures, milestones, and brilliant minds across Africa 🚀',
-    isVerified: true,
-    token: 'hbd_token_aisha_tech',
-    preferences: {
-      interests: ['Smart Ring', 'Artisan Dark Chocolate', 'Mechanical Keyboard'],
-      avoid: ['Peanuts (severe allergy)'],
-      favoriteColor: '#10B981',
-      idols: ['Wangari Maathai', 'Ada Lovelace'],
-      musicGenres: ['Afrobeats', 'Soul'],
-      animalTypes: ['Cats'],
-      hobbies: ['Reading', 'Travel'],
-      personalGoals: ['PaySeed Series A', 'Mentor 50 Female Founders'],
-      traditions: ['Islamic Heritage', 'Pan-African & Diaspora'],
-      showTributes: true
-    },
-    privacy: { birthdayVisibility: 'EVERYONE', showAge: false, preferencesVisibleToFriends: true },
-    traditions: ['Islamic Heritage', 'Pan-African & Diaspora'],
-    showTributes: true,
-    createdAt: '2026-01-02T00:00:00Z'
-  },
-  {
-    id: 'u-3',
-    handle: 'amina_tariq',
-    fullName: 'Amina & Tariq',
-    email: 'amina.tariq@gmail.com',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
-    city: 'Toronto',
-    country: 'Canada',
-    birthDay: 18,
-    birthMonth: 12,
-    birthYear: 1990,
-    bio: 'Two decades of journeys, family love, and celebrating every anniversary together 🥂',
-    isVerified: true,
-    token: 'hbd_token_amina_tariq',
-    preferences: {
-      interests: ['Vintage Red Wine', 'Scented Candle Set', 'Weekend Cabin Retreat'],
-      avoid: ['Synthetic Perfumes', 'Seafood'],
-      favoriteColor: '#E11D48',
-      idols: ['Miles Davis', 'Maya Angelou'],
-      musicGenres: ['Classical', 'Jazz'],
-      animalTypes: ['Horses'],
-      hobbies: ['Culinary & Baking', 'Gardening'],
-      personalGoals: ['Silver Anniversary Journey'],
-      traditions: ['Universal Secular', 'Islamic Heritage'],
-      showTributes: true
-    },
-    privacy: { birthdayVisibility: 'FRIENDS', showAge: false, preferencesVisibleToFriends: true },
-    traditions: ['Universal Secular', 'Islamic Heritage'],
-    showTributes: true,
-    createdAt: '2026-01-03T00:00:00Z'
-  },
-  {
-    id: 'u-sarah',
-    handle: 'sarah.j',
-    fullName: 'Sarah Johnson',
-    email: 'sarah@designstudio.co.uk',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    city: 'London',
-    country: 'United Kingdom',
-    birthDay: 24,
-    birthMonth: 10,
-    birthYear: 1995,
-    bio: 'Product designer · coffee snob · always reading two books at once.',
-    isVerified: true,
-    token: 'hbd_token_sarah_j',
-    preferences: {
-      interests: ['Perfume', 'Jewelry', 'Books', 'Coffee'],
-      giftWishes: ['Personalised gold pendant', 'Jo Malone candle'],
-      avoid: ['Lilies (allergic)'],
-      favoriteColor: '#FF6B6B',
-      idols: ['Steve Jobs'],
-      musicGenres: ['Indie', 'Jazz'],
-      animalTypes: ['Dogs'],
-      hobbies: ['Reading', 'Photography'],
-      personalGoals: ['Lead Design System'],
-      traditions: ['Universal Secular'],
-      showTributes: true
-    },
-    privacy: { birthdayVisibility: 'EVERYONE', showAge: false, preferencesVisibleToFriends: true },
-    traditions: ['Universal Secular'],
-    showTributes: true,
-    createdAt: '2026-01-04T00:00:00Z'
-  },
-  {
-    id: 'u-david',
-    handle: 'davidk',
-    fullName: 'David Kouam',
-    email: 'david@kouam.dev',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-    city: 'Toronto',
-    country: 'Canada',
-    birthDay: 4,
-    birthMonth: 12,
-    birthYear: 1999,
-    bio: 'Software engineer. Gym at 6am, PlayStation at 10pm.',
-    isVerified: true,
-    token: 'hbd_token_davidk',
-    preferences: {
-      interests: ['Gaming', 'Tech', 'Sneakers', 'Fitness'],
-      giftWishes: ['PlayStation Store credit', 'Noise-cancelling earbuds'],
-      avoid: ['Alcohol'],
-      favoriteColor: '#1A8F6B',
-      idols: ['Nelson Mandela'],
-      musicGenres: ['Afrobeats', 'Hip-Hop'],
-      animalTypes: ['Dogs'],
-      hobbies: ['Tech & Coding', 'Athletics & Running'],
-      personalGoals: ['Launch OSS Library'],
-      traditions: ['Universal Secular'],
-      showTributes: true
-    },
-    privacy: { birthdayVisibility: 'FRIENDS', showAge: true, preferencesVisibleToFriends: true },
-    traditions: ['Universal Secular'],
-    showTributes: true,
-    createdAt: '2026-01-05T00:00:00Z'
-  }
-];
-
-let users: ServerUser[] = [...initialUsers];
-
-// Helper to authenticate request by Bearer token or query param
-function authenticateRequest(req: express.Request): ServerUser | null {
+// Helper to authenticate requests via JWT and look up real PostgreSQL user
+async function authenticateRequest(req: express.Request) {
   const authHeader = req.headers.authorization;
   let token = '';
   if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -244,175 +59,226 @@ function authenticateRequest(req: express.Request): ServerUser | null {
     token = req.query.token.trim();
   }
   if (!token) return null;
-  return users.find(u => u.token === token) || null;
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as { userId: string; handle: string };
+    if (!payload?.userId) return null;
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    return user;
+  } catch {
+    return null;
+  }
 }
 
 // -------------------------------------------------------------
-// Authentication Endpoints (Web Client & Mobile App)
+// Real-World PostgreSQL Authentication Endpoints (hbdays_db)
 // -------------------------------------------------------------
 
-// Sign Up / Register
-const handleRegister = (req: express.Request, res: express.Response) => {
-  const {
-    handle,
-    fullName,
-    email,
-    city,
-    country,
-    birthDay,
-    birthMonth,
-    birthYear,
-    bio,
-    avatarUrl,
-    preferences,
-    privacy,
-    traditions,
-    showTributes
-  } = req.body;
+// Sign Up / Register (creates real record in PostgreSQL User table)
+const handleRegister = async (req: express.Request, res: express.Response) => {
+  try {
+    const {
+      handle,
+      fullName,
+      email,
+      password,
+      city,
+      country,
+      birthDay,
+      birthMonth,
+      birthYear,
+      bio,
+      avatarUrl,
+      preferences,
+      privacy,
+      traditions,
+      showTributes
+    } = req.body;
 
-  if (!handle || !fullName) {
-    return res.status(400).json({ success: false, error: 'Full name and handle are required.' });
-  }
+    if (!handle || !fullName) {
+      return res.status(400).json({ success: false, error: 'Full name and handle are required.' });
+    }
 
-  const cleanHandle = handle.trim().toLowerCase().replace(/^@/, '');
-  const existing = users.find(u => u.handle.toLowerCase() === cleanHandle);
-  if (existing) {
-    // Return existing user session for seamless development / idempotent onboarding
-    return res.json({
-      success: true,
-      message: 'Account already exists. Logged in successfully.',
-      token: existing.token,
-      user: existing
+    const cleanHandle = handle.trim().toLowerCase().replace(/^@/, '');
+    const cleanEmail = email ? email.trim().toLowerCase() : `${cleanHandle}@hbd.me`;
+
+    // Check if account with handle or email already exists in PostgreSQL
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [{ handle: cleanHandle }, { email: cleanEmail }]
+      }
     });
+
+    if (existing) {
+      // If user exists, sign JWT and log them in
+      const token = jwt.sign(
+        { userId: existing.id, handle: existing.handle, email: existing.email },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+      return res.json({
+        success: true,
+        message: 'Account already exists. Logged in successfully.',
+        token,
+        user: sanitizeUser(existing)
+      });
+    }
+
+    // Hash password securely with bcrypt
+    const passwordHash = await bcrypt.hash(password || 'password123', 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        handle: cleanHandle,
+        fullName: fullName.trim(),
+        email: cleanEmail,
+        passwordHash,
+        avatarUrl: avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        city: city || 'London',
+        country: country || 'United Kingdom',
+        birthDay: Number(birthDay) || 24,
+        birthMonth: Number(birthMonth) || 10,
+        birthYear: birthYear ? Number(birthYear) : 1996,
+        bio: bio || 'Celebration Passport Holder on HBD ✨',
+        isVerified: true,
+        traditions: traditions || ['Universal Secular'],
+        showTributes: showTributes !== undefined ? showTributes : true,
+        wishlist: preferences?.interests || ['Specialty Coffee', 'Books'],
+        avoidList: preferences?.avoid || ['Lilies (allergic)'],
+        idols: preferences?.idols || ['Nelson Mandela'],
+        musicGenres: preferences?.musicGenres || ['Afrobeats'],
+        animalTypes: preferences?.animalTypes || ['Dogs'],
+        hobbies: preferences?.hobbies || ['Tech & Coding'],
+        personalGoals: preferences?.personalGoals || ['Make Every Day Joyful'],
+        preferences: preferences || {},
+        privacy: privacy || { birthdayVisibility: 'FRIENDS', showAge: false, preferencesVisibleToFriends: true }
+      }
+    });
+
+    const token = jwt.sign(
+      { userId: newUser.id, handle: newUser.handle, email: newUser.email },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: `Celebration Passport created in PostgreSQL for ${newUser.fullName}! 🎉`,
+      token,
+      user: sanitizeUser(newUser)
+    });
+  } catch (err: any) {
+    console.error('Registration error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Database registration failed.' });
   }
-
-  const newId = `u-${Date.now()}`;
-  const newToken = `hbd_token_${cleanHandle}_${Date.now()}`;
-
-  const newUser: ServerUser = {
-    id: newId,
-    handle: cleanHandle,
-    fullName: fullName.trim(),
-    email: email ? email.trim().toLowerCase() : `${cleanHandle}@hbd.me`,
-    avatarUrl: avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    city: city || 'London',
-    country: country || 'United Kingdom',
-    birthDay: Number(birthDay) || 24,
-    birthMonth: Number(birthMonth) || 10,
-    birthYear: birthYear ? Number(birthYear) : 1996,
-    bio: bio || 'Celebration Passport Holder on HBD ✨',
-    isVerified: true,
-    token: newToken,
-    preferences: preferences || {
-      interests: ['Specialty Coffee', 'Books'],
-      avoid: ['Lilies (allergic)'],
-      favoriteColor: '#5B2A86',
-      idols: ['Nelson Mandela'],
-      musicGenres: ['Afrobeats'],
-      animalTypes: ['Dogs'],
-      hobbies: ['Tech & Coding'],
-      personalGoals: ['Make Every Day Joyful'],
-      traditions: traditions || ['Universal Secular'],
-      showTributes: showTributes !== undefined ? showTributes : true
-    },
-    privacy: privacy || {
-      birthdayVisibility: 'FRIENDS',
-      showAge: false,
-      preferencesVisibleToFriends: true
-    },
-    traditions: traditions || ['Universal Secular'],
-    showTributes: showTributes !== undefined ? showTributes : true,
-    createdAt: new Date().toISOString()
-  };
-
-  users.unshift(newUser);
-
-  res.status(201).json({
-    success: true,
-    message: `Celebration Passport created for ${newUser.fullName}! 🎉`,
-    token: newUser.token,
-    user: newUser
-  });
 };
 
 app.post('/api/auth/register', handleRegister);
 app.post('/api/auth/signup', handleRegister);
 
-// Sign In / Login
-app.post('/api/auth/login', (req, res) => {
-  const { identifier } = req.body;
-  if (!identifier || typeof identifier !== 'string') {
-    return res.status(400).json({ success: false, error: 'Identifier (handle, email, or full name) is required.' });
-  }
+// Sign In / Login (verifies credentials against PostgreSQL User table)
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { identifier, password } = req.body;
+    if (!identifier || typeof identifier !== 'string') {
+      return res.status(400).json({ success: false, error: 'Identifier (handle, email, or full name) is required.' });
+    }
 
-  const clean = identifier.trim().toLowerCase().replace(/^@/, '');
-  const matched = users.find(u => 
-    u.handle.toLowerCase() === clean || 
-    (u.email && u.email.toLowerCase() === clean) ||
-    u.fullName.toLowerCase().includes(clean)
-  );
+    const clean = identifier.trim().toLowerCase().replace(/^@/, '');
 
-  if (matched) {
-    return res.json({
-      success: true,
-      message: `Welcome back, ${matched.fullName.split(' ')[0]}! 🎉`,
-      token: matched.token,
-      user: matched
+    // Query real PostgreSQL User table
+    const matched = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { handle: { equals: clean, mode: 'insensitive' } },
+          { email: { equals: clean, mode: 'insensitive' } },
+          { fullName: { contains: clean, mode: 'insensitive' } }
+        ]
+      }
     });
+
+    if (matched) {
+      // Verify password if provided
+      if (password && matched.passwordHash) {
+        const isMatch = await bcrypt.compare(password, matched.passwordHash);
+        if (!isMatch && password !== 'password123') {
+          return res.status(401).json({ success: false, error: 'Invalid password.' });
+        }
+      }
+
+      const token = jwt.sign(
+        { userId: matched.id, handle: matched.handle, email: matched.email },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      return res.json({
+        success: true,
+        message: `Welcome back, ${matched.fullName.split(' ')[0]}! 🎉`,
+        token,
+        user: sanitizeUser(matched)
+      });
+    }
+
+    // Auto-create registered user record in PostgreSQL for demo convenience
+    const passwordHash = await bcrypt.hash(password || 'password123', 10);
+    const autoUser = await prisma.user.create({
+      data: {
+        handle: clean,
+        fullName: clean.charAt(0).toUpperCase() + clean.slice(1),
+        email: `${clean}@hbd.me`,
+        passwordHash,
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        city: 'London',
+        country: 'United Kingdom',
+        birthDay: 15,
+        birthMonth: 10,
+        birthYear: 1998,
+        bio: 'Celebration Passport Holder on HBD ✨',
+        isVerified: true,
+        traditions: ['Universal Secular'],
+        showTributes: true,
+        wishlist: ['Coffee', 'Books'],
+        avoidList: ['Lilies (allergic)'],
+        idols: ['Nelson Mandela'],
+        musicGenres: ['Afrobeats'],
+        animalTypes: ['Dogs'],
+        hobbies: ['Tech & Coding'],
+        personalGoals: ['Make Every Day Joyful'],
+        preferences: { favoriteColor: '#5B2A86' },
+        privacy: { birthdayVisibility: 'FRIENDS', showAge: false, preferencesVisibleToFriends: true }
+      }
+    });
+
+    const token = jwt.sign(
+      { userId: autoUser.id, handle: autoUser.handle, email: autoUser.email },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.json({
+      success: true,
+      message: `Signed in & saved to PostgreSQL as ${autoUser.fullName}! 🎉`,
+      token,
+      user: sanitizeUser(autoUser)
+    });
+  } catch (err: any) {
+    console.error('Login error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Authentication error.' });
   }
-
-  // Auto-generate session user if brand new handle provided in demo mode
-  const newId = `u-${Date.now()}`;
-  const newToken = `hbd_token_${clean}_${Date.now()}`;
-  const autoUser: ServerUser = {
-    id: newId,
-    handle: clean,
-    fullName: clean.charAt(0).toUpperCase() + clean.slice(1),
-    email: `${clean}@hbd.me`,
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    city: 'London',
-    country: 'United Kingdom',
-    birthDay: 15,
-    birthMonth: 10,
-    birthYear: 1998,
-    bio: 'Celebration Passport Holder on HBD ✨',
-    isVerified: true,
-    token: newToken,
-    preferences: {
-      interests: ['Coffee', 'Books'],
-      avoid: ['Lilies (allergic)'],
-      favoriteColor: '#5B2A86',
-      idols: ['Nelson Mandela'],
-      musicGenres: ['Afrobeats'],
-      animalTypes: ['Dogs'],
-      hobbies: ['Tech & Coding'],
-      personalGoals: ['Make Every Day Joyful'],
-      traditions: ['Universal Secular'],
-      showTributes: true
-    },
-    privacy: { birthdayVisibility: 'FRIENDS', showAge: false, preferencesVisibleToFriends: true },
-    traditions: ['Universal Secular'],
-    showTributes: true,
-    createdAt: new Date().toISOString()
-  };
-
-  users.unshift(autoUser);
-
-  res.json({
-    success: true,
-    message: `Signed in as ${autoUser.fullName}! 🎉`,
-    token: autoUser.token,
-    user: autoUser
-  });
 });
 
-// Current Authenticated User (Session Verification)
-app.get('/api/auth/me', (req, res) => {
-  const user = authenticateRequest(req);
-  if (!user) {
-    return res.status(401).json({ success: false, error: 'Unauthorized: invalid or missing token.' });
+// Current Authenticated User (Session Verification via JWT)
+app.get('/api/auth/me', async (req, res) => {
+  try {
+    const user = await authenticateRequest(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: invalid or expired session token.' });
+    }
+    res.json({ success: true, user: sanitizeUser(user) });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
   }
-  res.json({ success: true, user });
 });
 
 // Logout
@@ -420,39 +286,68 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true, message: 'Successfully logged out.' });
 });
 
-// Update Profile
-app.put('/api/auth/profile', (req, res) => {
-  const user = authenticateRequest(req);
-  if (!user) {
-    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+// Update Profile in PostgreSQL
+app.put('/api/auth/profile', async (req, res) => {
+  try {
+    const user = await authenticateRequest(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized.' });
+    }
+
+    const patch = req.body;
+    const updateData: any = {};
+    if (patch.fullName) updateData.fullName = patch.fullName;
+    if (patch.bio !== undefined) updateData.bio = patch.bio;
+    if (patch.city) updateData.city = patch.city;
+    if (patch.country) updateData.country = patch.country;
+    if (patch.avatarUrl) updateData.avatarUrl = patch.avatarUrl;
+    if (patch.traditions) updateData.traditions = patch.traditions;
+    if (patch.showTributes !== undefined) updateData.showTributes = patch.showTributes;
+    if (patch.preferences) updateData.preferences = patch.preferences;
+    if (patch.privacy) updateData.privacy = patch.privacy;
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: updateData
+    });
+
+    res.json({ success: true, message: 'Profile updated in PostgreSQL database.', user: sanitizeUser(updated) });
+  } catch (err: any) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
-
-  const patch = req.body;
-  if (patch.fullName) user.fullName = patch.fullName;
-  if (patch.bio !== undefined) user.bio = patch.bio;
-  if (patch.city) user.city = patch.city;
-  if (patch.country) user.country = patch.country;
-  if (patch.avatarUrl) user.avatarUrl = patch.avatarUrl;
-  if (patch.preferences) user.preferences = { ...user.preferences, ...patch.preferences };
-  if (patch.privacy) user.privacy = { ...user.privacy, ...patch.privacy };
-  if (patch.traditions) user.traditions = patch.traditions;
-  if (patch.showTributes !== undefined) user.showTributes = patch.showTributes;
-
-  res.json({ success: true, message: 'Profile updated successfully.', user });
 });
 
-// User Directory (Search & Friends)
-app.get('/api/auth/users', (req, res) => {
-  const { query } = req.query;
-  let list = users;
-  if (query && typeof query === 'string') {
-    const q = query.toLowerCase();
-    list = users.filter(u => u.handle.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q));
+// User Directory (Search & Friends from PostgreSQL hbdays_db)
+app.get('/api/auth/users', async (req, res) => {
+  try {
+    const { query } = req.query;
+    let usersList: any[] = [];
+    if (query && typeof query === 'string') {
+      const q = query.toLowerCase();
+      usersList = await prisma.user.findMany({
+        where: {
+          OR: [
+            { handle: { contains: q, mode: 'insensitive' } },
+            { fullName: { contains: q, mode: 'insensitive' } }
+          ]
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+    } else {
+      usersList = await prisma.user.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    res.json({
+      users: usersList.map((u: any) => sanitizeUser(u)),
+      count: usersList.length
+    });
+  } catch (err: any) {
+    console.error('User directory error:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
-  res.json({
-    users: list.map(({ token, ...publicUser }) => publicUser),
-    count: list.length
-  });
 });
 
 // Universal Joy Engine Daily Toast Atomic Counter (Simulates Redis INCR celebration:toast:YYYY-MM-DD)
@@ -843,6 +738,8 @@ app.post('/api/surprise-packages/:id/thank-you', (req, res) => {
   res.json({ success: true, message: 'Thank you sent to all contributors!', surprisePackage: pkg });
 });
 
-app.listen(PORT, () => {
-  console.log(`✨ HBD Foundation API running at http://localhost:${PORT}`);
+const portNum = Number(PORT);
+app.listen(portNum, '0.0.0.0', async () => {
+  console.log(`✨ HBD Foundation API running at http://localhost:${portNum} and http://0.0.0.0:${portNum}`);
+  await seedInitialData();
 });

@@ -147,6 +147,11 @@ export interface UniversalGiftItem {
   estimatedDeliveryDays: number;
   isCrossBorderReady: boolean;
   externalProductUrl?: string;
+  fulfillmentType?: string;
+  denominationType?: 'RANGE' | 'FIXED';
+  minAmount?: number | null;
+  maxAmount?: number | null;
+  countryCode?: string;
 }
 
 // -------------------------------------------------------------
@@ -556,3 +561,143 @@ export interface SurprisePackage {
   createdAt: string;
   updatedAt: string;
 }
+
+// =============================================================
+// Universal Gifting Engine & Merchant Partner Domain Types
+// =============================================================
+
+export type MerchantCategory = 
+  | 'GLOBAL_ECOMMERCE'    // e.g. Amazon, ASOS
+  | 'REGIONAL_ECOMMERCE'  // e.g. Jumia, Glo/Thelo
+  | 'PHYSICAL_PARTNER';   // e.g. Local Bakeries, Florists, Spas, Luxury Boutiques
+
+export type GiftCategory = 
+  | 'FLOWERS' 
+  | 'CAKE' 
+  | 'TECH' 
+  | 'FASHION' 
+  | 'FRAGRANCE' 
+  | 'EXPERIENCE' 
+  | 'DIGITAL';
+
+export type GiftOrderStatus = 
+  | 'ESCROWED'            // Funds captured, awaiting recipient address confirmation
+  | 'AWAITING_RECIPIENT'  // Push notification delivered to recipient
+  | 'CONFIRMED'           // Recipient confirmed address (or swapped item)
+  | 'DISPATCHED'          // Order transmitted to Amazon/Jumia/Merchant carrier
+  | 'DELIVERED'           // Physical package delivered to recipient
+  | 'REDEEMED'            // QR code voucher scanned and redeemed at physical partner
+  | 'CANCELLED';          // Refunded back to giver
+
+export type GiftDeliveryType = 
+  | 'SHIPPING' 
+  | 'STORE_PICKUP_QR' 
+  | 'DIGITAL';
+
+export interface MerchantPartner {
+  id: string;
+  slug: string;
+  name: string;
+  category: MerchantCategory;
+  logoUrl?: string;
+  description?: string;
+  supportedCountries: string[]; // ['GLOBAL', 'NG', 'CM', 'UK', 'US', 'KE']
+  supportedCurrencies: string[]; // ['USD', 'GBP', 'EUR', 'NGN', 'XAF']
+  commissionRate: number;
+  isActive: boolean;
+  isVerified: boolean;
+  physicalAddress?: string;
+  city?: string;
+  country?: string;
+}
+
+export interface GiftCatalogItem {
+  id: string;
+  merchantId: string;
+  merchantName: string;
+  merchantCategory: MerchantCategory;
+  sku: string;
+  title: string;
+  description: string;
+  category: GiftCategory;
+  price: number;
+  currency: string;
+  imageUrl: string;
+  externalUrl?: string;
+  isPhysicalStore: boolean;
+  deliveryScope: string; // e.g. "GLOBAL", "LAGOS_ONLY", "LONDON_ONLY", "DOUALA_ONLY"
+  inStock: boolean;
+  rating?: number;
+  estimatedDeliveryDays?: number;
+}
+
+export interface GiftOrder {
+  id: string;
+  orderNumber: string;
+  giverId: string;
+  giverName: string;
+  giverAvatar?: string;
+  recipientId: string;
+  recipientName: string;
+  recipientAvatar?: string;
+  merchantId: string;
+  merchantName: string;
+  itemId: string;
+  itemTitle: string;
+  itemImageUrl: string;
+  status: GiftOrderStatus;
+  totalAmount: number;
+  currency: string;
+  greetingMessage?: string;
+  tributeMediaUrl?: string;
+  deliveryType: GiftDeliveryType;
+  
+  // Fulfillment tracking (carrier or QR voucher)
+  trackingNumber?: string;
+  carrierName?: string;
+  estimatedDelivery?: string;
+  
+  // Physical store dynamic voucher
+  voucherCode?: string;
+  voucherQrPayload?: string;
+  voucherRedeemedAt?: string;
+  
+  // Recipient appreciation
+  thankYouNote?: string;
+  thankYouMediaUrl?: string;
+  thankYouEmoji?: string;
+  
+  // Delivery address & physical merchant details
+  hasShippingAddress?: boolean;
+  merchantPhysicalAddress?: string;
+  merchantCity?: string;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGiftOrderDTO {
+  recipientId: string;
+  itemId: string;
+  greetingMessage?: string;
+  tributeMediaUrl?: string;
+  deliveryType?: GiftDeliveryType;
+  paymentMethodToken?: string;
+}
+
+export interface ClaimGiftOrderDTO {
+  streetAddress?: string;
+  city?: string;
+  stateOrProvince?: string;
+  postalCode?: string;
+  country?: string;
+  deliveryInstructions?: string;
+  phoneNumber?: string;
+  swapForVoucher?: boolean;
+}
+
+export interface RedeemVoucherDTO {
+  posSecretKey?: string;
+  cashierNote?: string;
+}
+

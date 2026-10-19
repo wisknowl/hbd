@@ -4,7 +4,6 @@ import {
   View, 
   Text, 
   TouchableOpacity, 
-  SafeAreaView, 
   ActivityIndicator,
   Platform 
 } from 'react-native';

@@ -5,7 +5,6 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  SafeAreaView, 
   TextInput, 
   Image, 
   Switch, 
@@ -14,7 +13,7 @@ import {
   StatusBar
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../context/ThemeContext';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { useAuth, DEMO_MOBILE_USERS } from '../context/AuthContext';

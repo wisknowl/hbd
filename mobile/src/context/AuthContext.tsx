@@ -1,10 +1,66 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
 
-const API_BASE = Platform.select({
-  android: 'http://10.0.2.2:4000/api',
-  default: 'http://localhost:4000/api'
-});
+const getHostAddress = (): string | null => {
+  try {
+    const scriptURL: string | undefined = NativeModules?.SourceCode?.scriptURL;
+    if (scriptURL) {
+      const match = scriptURL.match(/https?:\/\/([^/:]+)/);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+};
+
+const detectedHost = getHostAddress();
+const CANDIDATE_API_BASES = Array.from(new Set([
+  detectedHost ? `http://${detectedHost}:4000/api` : null,
+  Platform.OS === 'android' ? 'http://10.0.2.2:4000/api' : null,
+  'http://10.136.81.254:4000/api',
+  'http://localhost:4000/api'
+].filter(Boolean) as string[]));
+
+let activeApiBase = CANDIDATE_API_BASES[0] || 'http://localhost:4000/api';
+
+export async function fetchFromBackend(endpoint: string, options: RequestInit = {}): Promise<Response> {
+  const timeoutMs = 3000;
+  
+  // 1. Try active base first
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const res = await fetch(`${activeApiBase}${endpoint}`, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    return res;
+  } catch (initialErr) {
+    // 2. Try all other candidates
+    for (const candidate of CANDIDATE_API_BASES) {
+      if (candidate === activeApiBase) continue;
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const res = await fetch(`${candidate}${endpoint}`, {
+          ...options,
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+        console.log(`[Mobile Auth] Switched active backend to: ${candidate}`);
+        activeApiBase = candidate;
+        return res;
+      } catch {
+        // try next candidate
+      }
+    }
+    throw initialErr;
+  }
+}
 
 export interface MobileUser {
   id: string;
@@ -101,8 +157,8 @@ export const DEMO_MOBILE_USERS: MobileUser[] = [
 interface AuthContextType {
   user: MobileUser | null;
   isAuthenticated: boolean;
-  login: (identifier: string) => boolean;
-  signUp: (userData: Partial<MobileUser>) => MobileUser;
+  login: (identifier: string, password?: string) => Promise<boolean> | boolean;
+  signUp: (userData: Partial<MobileUser>, password?: string) => Promise<MobileUser> | MobileUser;
   logout: () => void;
   switchUser: (u: MobileUser) => void;
   openAuthModal: (mode?: 'login' | 'signup') => void;
@@ -118,46 +174,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
 
-  const login = (identifier: string): boolean => {
+  const login = async (identifier: string, password?: string): Promise<boolean> => {
     const clean = identifier.trim().toLowerCase().replace(/^@/, '');
 
-    // Synchronize with backend API
-    fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.user) {
-          const u: MobileUser = {
-            id: data.user.id,
-            handle: data.user.handle,
-            fullName: data.user.fullName,
-            avatarUrl: data.user.avatarUrl,
-            city: data.user.city,
-            country: data.user.country,
-            birthDay: data.user.birthDay,
-            birthMonth: data.user.birthMonth,
-            birthYear: data.user.birthYear,
-            bio: data.user.bio,
-            isVerifiedCivil: data.user.isVerified,
-            wishlist: data.user.preferences?.interests || ['Specialty Coffee', 'Books'],
-            avoidList: data.user.preferences?.avoid || ['None'],
-            idols: data.user.preferences?.idols || ['Nelson Mandela'],
-            musicGenres: data.user.preferences?.musicGenres || ['Afrobeats'],
-            animalTypes: data.user.preferences?.animalTypes || ['Dogs'],
-            hobbies: data.user.preferences?.hobbies || ['Tech & Coding'],
-            personalGoals: data.user.preferences?.personalGoals || ['Make Every Day Joyful'],
-            traditions: data.user.traditions || ['Universal Secular'],
-            showTributes: data.user.showTributes !== undefined ? data.user.showTributes : true
-          };
-          setUser(u);
-        }
-      })
-      .catch(err => {
-        console.warn('[Mobile Auth] Backend offline, using local verification:', err);
+    // Synchronize with PostgreSQL backend API
+    try {
+      const res = await fetchFromBackend('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password })
       });
+      const data = await res.json();
+      if (data.success && data.user) {
+        const u: MobileUser = {
+          id: data.user.id,
+          handle: data.user.handle,
+          fullName: data.user.fullName,
+          avatarUrl: data.user.avatarUrl,
+          city: data.user.city,
+          country: data.user.country,
+          birthDay: data.user.birthDay,
+          birthMonth: data.user.birthMonth,
+          birthYear: data.user.birthYear,
+          bio: data.user.bio,
+          isVerifiedCivil: data.user.isVerified,
+          wishlist: data.user.preferences?.interests || ['Specialty Coffee', 'Books'],
+          avoidList: data.user.preferences?.avoid || ['None'],
+          idols: data.user.preferences?.idols || ['Nelson Mandela'],
+          musicGenres: data.user.preferences?.musicGenres || ['Afrobeats'],
+          animalTypes: data.user.preferences?.animalTypes || ['Dogs'],
+          hobbies: data.user.preferences?.hobbies || ['Tech & Coding'],
+          personalGoals: data.user.preferences?.personalGoals || ['Make Every Day Joyful'],
+          traditions: data.user.traditions || ['Universal Secular'],
+          showTributes: data.user.showTributes !== undefined ? data.user.showTributes : true
+        };
+        setUser(u);
+        setIsAuthModalVisible(false);
+        return true;
+      }
+    } catch (err) {
+      console.warn('[Mobile Auth] Backend offline, using local verification fallback:', err);
+    }
 
     const found = DEMO_MOBILE_USERS.find(
       u => u.handle.toLowerCase() === clean || u.fullName.toLowerCase().includes(clean)
@@ -167,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthModalVisible(false);
       return true;
     }
-    // If not found in presets, create a session user for this handle
+
     if (clean.length > 0) {
       const newUser: MobileUser = {
         id: `u-${Date.now()}`,
@@ -198,7 +255,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
-  const signUp = (userData: Partial<MobileUser>): MobileUser => {
+  const signUp = async (userData: Partial<MobileUser>, password?: string): Promise<MobileUser> => {
     const cleanHandle = (userData.handle || 'celebrant').replace(/^@/, '');
     const newUser: MobileUser = {
       id: `u-${Date.now()}`,
@@ -222,44 +279,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       traditions: userData.traditions || ['Universal Secular'],
       showTributes: userData.showTributes !== undefined ? userData.showTributes : true,
     };
+
+    // Call PostgreSQL backend API
+    try {
+      const res = await fetchFromBackend('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          handle: newUser.handle,
+          fullName: newUser.fullName,
+          password: password || 'password123',
+          avatarUrl: newUser.avatarUrl,
+          city: newUser.city,
+          country: newUser.country,
+          birthDay: newUser.birthDay,
+          birthMonth: newUser.birthMonth,
+          birthYear: newUser.birthYear,
+          bio: newUser.bio,
+          traditions: newUser.traditions,
+          showTributes: newUser.showTributes,
+          preferences: {
+            interests: newUser.wishlist,
+            avoid: newUser.avoidList,
+            idols: newUser.idols,
+            musicGenres: newUser.musicGenres,
+            animalTypes: newUser.animalTypes,
+            hobbies: newUser.hobbies,
+            personalGoals: newUser.personalGoals
+          }
+        })
+      });
+      const data = await res.json();
+      if (data?.success && data?.user?.id) {
+        newUser.id = data.user.id;
+      }
+    } catch (err) {
+      console.warn('[Mobile Auth] Backend sync deferred:', err);
+    }
+
     setUser(newUser);
     setIsAuthModalVisible(false);
-
-    // Call backend API
-    fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        handle: newUser.handle,
-        fullName: newUser.fullName,
-        avatarUrl: newUser.avatarUrl,
-        city: newUser.city,
-        country: newUser.country,
-        birthDay: newUser.birthDay,
-        birthMonth: newUser.birthMonth,
-        birthYear: newUser.birthYear,
-        bio: newUser.bio,
-        traditions: newUser.traditions,
-        showTributes: newUser.showTributes,
-        preferences: {
-          interests: newUser.wishlist,
-          avoid: newUser.avoidList,
-          idols: newUser.idols,
-          musicGenres: newUser.musicGenres,
-          animalTypes: newUser.animalTypes,
-          hobbies: newUser.hobbies,
-          personalGoals: newUser.personalGoals
-        }
-      })
-    }).catch(err => {
-      console.warn('[Mobile Auth] Backend sync deferred:', err);
-    });
-
     return newUser;
   };
 
   const logout = () => {
-    fetch(`${API_BASE}/auth/logout`, { method: 'POST' }).catch(() => {});
+    fetchFromBackend('/auth/logout', { method: 'POST' }).catch(() => {});
     setUser(null);
     setAuthModalMode('login');
     setIsAuthModalVisible(true);
